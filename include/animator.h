@@ -34,6 +34,7 @@ class Animated {
 public:
     virtual ~Animated() {}
     void animate(int sx, int sy, int ex, int ey, std::chrono::milliseconds ms, const std::function<void ()>& finished) {
+        assert(finished);
         mFinished = finished;
         m_x = sx;
         m_y = sy;
@@ -52,7 +53,14 @@ public:
     }
 
     void finish() {
-        mFinished();
+        assert(mFinished);
+        auto f = mFinished;
+        mFinished = nullptr;
+        f();
+    }
+
+    bool isFinished()  const {
+        return !mFinished;
     }
 
     bool inc() {
@@ -87,9 +95,11 @@ protected:
     int m_dx = 0, m_dy = 0;
 };
 
+template  <class T>
 class Animator {
 public:
-    using value_type = std::shared_ptr<Animated>;
+    static_assert (std::is_base_of<Animated, T>::value, "Must be inherited from Animated");
+    using value_type = std::shared_ptr<T>;
     Animator(Gempyre::Ui* ui, const std::function<void ()>& redraw) : m_ui(ui), mRedraw(redraw) {
     }
     void setSize(int width, int height) {
@@ -100,25 +110,28 @@ public:
         m_animates.emplace_back(ani);
         if(!isActive()) {
             m_timerId = m_ui->startTimer(TimerPeriod, false, [this]() {
-                const auto h = m_height / RowCount;
                 Stripes stripes(m_width);
-                const auto w = stripes.stripeWidth(); 
                 std::vector<value_type> to_remove; //keep loop integerity
                 for(auto& ani : m_animates) {
                     if(!ani->inc()) {
                         to_remove.push_back(ani);      
                     }
                 }
-                if(mRedraw)
-                    mRedraw();
-                for(auto& c : to_remove) {
+
+                for(auto& c : to_remove)  {
                     m_animates.remove(c);
-                    c->finish();
+                    if(!c->isFinished())
+                        c->finish();
                 }
-                if(m_animates.empty()) {
+
+                if(isActive() && m_animates.empty()) {
                     m_ui->stopTimer(m_timerId);
                     m_timerId = 0;
-                    }         
+                    }
+
+                //after timer active
+                if(mRedraw)
+                    mRedraw();
             });
         }
     }

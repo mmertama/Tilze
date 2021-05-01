@@ -23,8 +23,17 @@
             width: 100%;
             padding: 10 0;
             background-color: teal;
-        }    
-        #number {
+        }
+        .points {
+            font-size: large;
+            background: #f2f2f2;
+            padding: 5px;
+            font-family:Arial, Helvetica, sans-serif;
+            font-weight: bold;
+            display: table-cell;
+            vertical-align: middle;
+        }
+        .number {
             font-size: xx-large;
             background: #f2f2f2;
             padding: 5px;
@@ -33,6 +42,7 @@
             text-align: center;
             display: table-cell;
             vertical-align: middle;
+            width: 75%;
         }
     </style>
 </head>
@@ -40,9 +50,10 @@
     <script src="/gempyre.js"></script>
     <div id="content">
         <canvas id="canvas"></canvas>
-        <div class=wide id="dash">
-            <div class="wide" id="number">2</div>
-        </div>
+        <div class=wide id="dash">        
+             <div class="number" id="number">2</div>
+             <div class="points">Points: <span id="points">0</span></div>
+        </div>        
     </div>   
 </body>
 </html>
