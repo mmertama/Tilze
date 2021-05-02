@@ -6,7 +6,7 @@
 #include <gempyre.h>
 
 constexpr auto TimerPeriod = 30ms;
-constexpr auto StripeCount = 8;
+constexpr auto StripeCount = 5;
 constexpr auto RowCount = 8;
 constexpr auto MarginPx = 10;
 
@@ -40,7 +40,7 @@ public:
         m_y = sy;
         m_end_x = ex;
         m_end_y = ey;
-        const auto tics = ms.count() / TimerPeriod.count();
+        const auto tics = ms.count() / static_cast<double>(TimerPeriod.count());
         if(tics > 0) {
             auto dx = std::abs(ex - sx) / tics;
             auto dy = std::abs(ey - sy) / tics;
@@ -59,8 +59,8 @@ public:
         f();
     }
 
-    bool isFinished()  const {
-        return !mFinished;
+    bool isAnimated()  const {
+        return mFinished != nullptr;
     }
 
     bool inc() {
@@ -90,9 +90,9 @@ public:
     virtual void draw(Gempyre::FrameComposer& fc, int width, int height) const = 0;
 protected:
     std::function<void()> mFinished;
-    int m_x, m_y;
-    int m_end_x, m_end_y;
-    int m_dx = 0, m_dy = 0;
+    double m_x, m_y;
+    double m_end_x, m_end_y;
+    double m_dx = 0, m_dy = 0;
 };
 
 template  <class T>
@@ -111,17 +111,20 @@ public:
         if(!isActive()) {
             m_timerId = m_ui->startTimer(TimerPeriod, false, [this]() {
                 Stripes stripes(m_width);
-                std::vector<value_type> to_remove; //keep loop integerity
+                bool isRemoved = false;
                 for(auto& ani : m_animates) {
-                    if(!ani->inc()) {
-                        to_remove.push_back(ani);      
+                    if(!ani->inc() && ani->isAnimated()) {
+                        ani->finish();
+                        isRemoved = true;
+                        }
                     }
-                }
 
-                for(auto& c : to_remove)  {
-                    m_animates.remove(c);
-                    if(!c->isFinished())
-                        c->finish();
+                if(isRemoved) {
+                    m_animates.erase(
+                                std::remove_if(m_animates.begin(), m_animates.end(), [](const auto& c) {
+                        return !c->isAnimated();
+                    }),
+                                m_animates.end());
                 }
 
                 if(isActive() && m_animates.empty()) {
@@ -134,6 +137,11 @@ public:
                     mRedraw();
             });
         }
+    }
+
+    void draw(Gempyre::FrameComposer& fc, int width, int height) const {
+        for(const auto& a : m_animates)
+            a->draw(fc, width, height);
     }
 
     bool isActive() const {

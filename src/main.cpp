@@ -13,9 +13,8 @@
 
 #include<fstream>
 
-
 using namespace Gempyre;
-constexpr auto SlideSpeed = TimerPeriod * 20;
+constexpr auto SlideSpeed = TimerPeriod * 40;
 
 static void roundRect(FrameComposer& fc, const Element::Rect& rect, const std::string& color, int radius) {
   fc.beginPath();
@@ -37,7 +36,7 @@ class Cube : public Animated {
 public:
     Cube(int value, int stripe) : m_value(value), m_stripe(stripe) {}
     void draw(FrameComposer& fc, int w, int h) const { 
-        roundRect(fc, {m_x, m_y, w, h}, "cyan", 5);
+        roundRect(fc, {static_cast<int>(m_x), static_cast<int>(m_y), w, h}, "cyan", 5);
         fc.fillStyle("black");
         fc.font("bold 24px arial");
         fc.textBaseline("middle");
@@ -283,16 +282,22 @@ public:
             m_points += value;
             mPoints(m_points);
             cube.setValue(value + value);
+
+            for(auto& sister : sisters) {
+                const auto periody = time(cube.y(), sister->y());
+                const auto periodx = time(cube.x(), sister->x());
+                const auto period  = std::max(periodx, periody);
+                sister->animate(sister->x(), sister->y(), cube.x(), cube.y(), period, [&cube, this]() {
+                     merge(cube);
+                });
+                m_animator.addAnimation(sister);
+            }
         }
         const auto merged = !sisters.empty();
         squeeze();
         requestDraw();
-        if(merged) {
-            m_canvas.ui().startTimer(0s, true, [&cube, this]() {
-                merge(cube);
-            });
-        } else if(m_oldX >= 0) {
-            m_canvas.ui().startTimer(0s, true, [this]() {
+        if(!merged && m_oldX >= 0) {
+            m_canvas.ui().startTimer(200ms, true, [this]() {
                 select(m_oldX);
             });
         }
@@ -309,15 +314,13 @@ public:
                 --next_level;
             }
             if(next_level < level) {
-                auto ani = m_cubes.move(*c, level - 1);
+                auto moved = m_cubes.move(*c, level - 1); //after  this c is null
                 const auto ypos = yPos(level - 1);
-                const auto period = time(ani->y(), ypos);
-                ani->animate(ani->x(), ani->y(), ani->x(), ypos, period, [ani, this]() mutable {
-                    merge(*ani);
+                const auto period = time(moved->y(), ypos);
+                moved->animate(moved->x(), moved->y(), moved->x(), ypos, period, [moved, this]() {
+                    merge(*moved);
                 });
-                GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeeze - ani");
-                m_animator.addAnimation(ani);
-                 GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed ... ani");
+                m_animator.addAnimation(moved);
             }
         }
         GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed");
@@ -345,8 +348,10 @@ public:
         const auto h = m_height / RowCount;
         const auto w = stripes.stripeWidth();
         for(const auto& c : m_cubes) {
-            c->draw(fc, w, h);
+            if(!c->isAnimated())
+                c->draw(fc, w, h);
         }
+        m_animator.draw(fc, w, h);
         m_canvas.draw(fc);
     }
 
