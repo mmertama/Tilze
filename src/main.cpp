@@ -7,6 +7,7 @@
 #include <chrono>
 #include <list>
 #include <random>
+#include <array>
 
 #include "animator.h"
 #include "sparseiterator.h"
@@ -189,8 +190,9 @@ class Tilze {
     }   
     int get2Pow() const {
         std::default_random_engine eng(std::random_device {}());
-        std::uniform_int_distribution<int> dis(1, m_max_pow);
-        return std::pow(2, dis(eng)); 
+        std::uniform_int_distribution<int> dis(1, m_max_pow); //not working with old mingw
+        const auto exp = dis(eng);
+        return static_cast<int>(std::pow(2, exp));
         }
     int yPos(int level) const {
         return level * (m_height / RowCount);

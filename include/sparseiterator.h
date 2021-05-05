@@ -18,7 +18,7 @@ struct SparseIterator  {
             if(m_it == m_it_end)
                 break;
             ++m_it;
-        } while(*m_it == nullptr);
+        } while(m_it != m_it_end && *m_it == nullptr);
         return *this;
         }  
     SparseIterator operator++(int) {

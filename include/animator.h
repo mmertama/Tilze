@@ -84,8 +84,8 @@ public:
         m_y = y;
     }
 
-    int x() const {return m_end_x;}
-    int y() const {return m_end_y;}
+    int x() const {return static_cast<int>(m_end_x);}
+    int y() const {return static_cast<int>(m_end_y);}
 
     virtual void draw(Gempyre::FrameComposer& fc, int width, int height) const = 0;
 protected:
