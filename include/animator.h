@@ -7,7 +7,7 @@
 
 constexpr auto TimerPeriod = 30ms;
 constexpr auto StripeCount = 5;
-constexpr auto RowCount = 8;
+constexpr auto RowCount = 5;
 constexpr auto MarginPx = 10;
 
 class Stripes {

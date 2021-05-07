@@ -126,6 +126,29 @@ public:
         return ROWS;
     }
 
+    int size() const {
+        auto count = 0;
+        for(const auto&  o : *this) {
+            ++count;
+        }
+        return count;
+    }
+
+    bool empty() const {
+        return size() == 0;
+    }
+
+    bool full() const {
+        return size() == ROWS * STRIPES;
+    }
+
+    void clear() {
+        for(auto& c : *this)
+        {
+            c.reset();
+        }
+    }
+
     int level(int stripe) const {return size(stripe);}
     
     int level(const Cube& cube) const {
@@ -198,9 +221,10 @@ class Tilze {
         return level * (m_height / RowCount);
     }
 public:    
-    Tilze(const CanvasElement& canvas, const std::function<void(int)>& pointsFunc) :
+    Tilze(const CanvasElement& canvas, const std::function<void(int)>& pointsFunc, const std::function<void(int)>& gameOverFunc) :
         m_canvas(canvas),
         mPoints(pointsFunc),
+        mGameOver(gameOverFunc),
         m_animator(Animator<Cube>(&m_canvas.ui(), [this](){draw();})) {
         m_stream.open(uniqName());
     }
@@ -327,6 +351,9 @@ public:
         }
         GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed");
         --m_onActive;
+        if(m_onActive == 0 && m_cubes.full()) {
+            mGameOver(m_points);
+        }
     }
 
     void draw() const {
@@ -373,6 +400,7 @@ public:
 private:
     CanvasElement m_canvas;
     std::function<void(int)> mPoints;
+    std::function<void(int)> mGameOver;
     int m_width = 0;
     int m_height = 0;
     int m_selected_stripe = -1;
@@ -392,8 +420,13 @@ int main(int argc, char** argv) {
     Ui ui(Ui_resourceh, "/ui.html");
     CanvasElement canvas(ui, "canvas");
     Element number(ui, "number");
+    bool gameOver = false;
     Tilze tilze(canvas, [&ui](int points) {
         Element(ui, "points").setHTML(std::to_string(points));
+    }, [&](int points){
+        gameOver = true;
+        //Element gameOver(ui, "gameover");
+        //gameOver.setAttribute("visibility", "visible");
     });
 
     std::vector<std::pair<int, int>> vv;
