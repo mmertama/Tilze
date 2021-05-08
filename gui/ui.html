@@ -44,6 +44,45 @@
             vertical-align: middle;
             width: 75%;
         }
+
+        .popup_view {
+            visibility: hidden; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 25%;
+            width: 50%;
+            top: 30%;
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        .popup_content {
+            background-color: #8e8e8e;
+            margin: 12px;
+            padding: 50px;
+            border: 1px solid black;
+            text-align: center;
+            font-family:Arial, Helvetica, sans-serif;
+            font-weight: bold;
+        }
+
+        .popup_button {
+            padding: 12px;
+            color: #aa;
+            float: right;
+            font-size: 20px;
+            font-weight: bold;
+            font-color: cyan;
+            border: 1px solid black;
+        }
+
+        .popup_button:hover,
+        .popup_button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+            }
     </style>
 </head>
 <body>
@@ -54,6 +93,13 @@
              <div class="number" id="number">2</div>
              <div class="points">Points: <span id="points">0</span></div>
         </div>        
-    </div>   
+    </div>
+    <div id="game_over_win" class="popup_view">
+        <div class="popup_content">
+            <h3>Game over!</h3>
+            <p><span id="game_over_points">0</span> Points!</p>
+            <button id="restart" class="popup_button">Restart</button>
+        </div>
+    </div>
 </body>
 </html>

@@ -13,6 +13,7 @@
 #include "sparseiterator.h"
 
 #include<fstream>
+#include<filesystem>
 
 using namespace Gempyre;
 constexpr auto SlideSpeed = TimerPeriod * 40;
@@ -128,7 +129,7 @@ public:
 
     int size() const {
         auto count = 0;
-        for(const auto&  o : *this) {
+        for(auto it = begin(); it != end(); ++it) {
             ++count;
         }
         return count;
@@ -196,12 +197,12 @@ private:
 using CubeTable = Table<RowCount, StripeCount>;
 
 std::string uniqName() {
-    std::string log("/tmp/tilze");
+    auto path = std::filesystem::temp_directory_path() / "tilze";
     int p = 0;
-    auto name = log + ".txt";
+    auto name = path.string() + ".txt";
     while(GempyreUtils::fileExists(name)) {
         ++p;
-        name = log + std::to_string(p) + ".txt";
+        name = path.string() + std::to_string(p) + ".txt";
     }
     return name;
 }
@@ -211,12 +212,7 @@ class Tilze {
     auto time(int from, int to) const {
         return SlideSpeed * std::abs(from - to) / m_height;
     }   
-    int get2Pow() const {
-        std::default_random_engine eng(std::random_device {}());
-        std::uniform_int_distribution<int> dis(1, m_max_pow); //not working with old mingw
-        const auto exp = dis(eng);
-        return static_cast<int>(std::pow(2, exp));
-        }
+
     int yPos(int level) const {
         return level * (m_height / RowCount);
     }
@@ -227,26 +223,6 @@ public:
         mGameOver(gameOverFunc),
         m_animator(Animator<Cube>(&m_canvas.ui(), [this](){draw();})) {
         m_stream.open(uniqName());
-    }
-
-    void setSelects(const std::vector<std::pair<int, int>>& values) {
-        auto it = std::make_shared<std::vector<std::pair<int, int>>::const_iterator>(values.begin());
-        auto end = values.end();
-        m_canvas.ui().startTimer(500ms, false, [this, it, end](auto timerId) {
-            GempyreUtils::log(GempyreUtils::LogLevel::Info, "set", std::distance(*it, end));
-            if(*it == end) {
-                m_canvas.ui().stopTimer(timerId);
-                return;
-            }
-            if(m_onActive || m_animator.isActive())
-                return;
-            const Stripes stripes(m_width);
-
-            m_current_number = (*it)->first;
-            m_selected_stripe = (*it)->second;
-            addCube(m_current_number, m_selected_stripe, m_height);
-            ++(*it);
-            });
     }
 
     void resize(int width, int height) {
@@ -262,20 +238,35 @@ public:
         requestDraw();
     }
 
-    int select(int x) {
-        if(m_onActive > 0 || m_animator.isActive()) {
-            m_oldX = x;
+    bool canAdd() const {
+        return m_onActive == 0 && !m_animator.isActive();
+    }
+
+    void clear() {
+        m_cubes.clear();
+        int m_current_number = 2;
+        m_points = 0;
+    }
+
+    int select(int stripe, int value) {
+        if(!canAdd()) {
+            m_oldStripe = stripe;
+            m_oldValue = value;
             return m_current_number; // Im too slow :-C
         }
-        m_oldX = -1;
-        const Stripes stripes(m_width);
-        m_selected_stripe = stripes.stripeAt(x);
+        m_oldStripe = -1;
+        m_oldValue = -1;
+        m_selected_stripe = stripe;
         addCube(m_current_number, m_selected_stripe, m_height);
         requestDraw();
-        m_current_number = get2Pow();
+        m_current_number = value;
         m_stream << m_current_number << " " << m_selected_stripe << std::endl;
         m_stream.flush();
         return m_current_number;
+    }
+
+    int pixelWidth() const {  //Todo no pixels
+        return m_width;
     }
 
  private:
@@ -322,12 +313,15 @@ public:
         const auto merged = !sisters.empty();
         squeeze();
         requestDraw();
-        if(!merged && m_oldX >= 0) {
+        if(!merged && m_oldStripe >= 0) {
             m_canvas.ui().startTimer(200ms, true, [this]() {
-                select(m_oldX);
+                select(m_oldStripe, m_oldValue);
             });
         }
          --m_onActive;
+        if(m_onActive == 0 && m_cubes.full()) {
+            mGameOver(m_points);
+        }
     }
 
     void squeeze() {
@@ -351,9 +345,6 @@ public:
         }
         GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed");
         --m_onActive;
-        if(m_onActive == 0 && m_cubes.full()) {
-            mGameOver(m_points);
-        }
     }
 
     void draw() const {
@@ -405,15 +396,22 @@ private:
     int m_height = 0;
     int m_selected_stripe = -1;
     CubeTable m_cubes;
-    int m_max_pow = 6;
     int m_current_number = 2;
     Animator<Cube> m_animator;
     bool m_onRedraw = false;
     int m_onActive = 0;
-    int m_oldX = -1;
-    std::ofstream m_stream;
+    int m_oldStripe = -1;
+    int m_oldValue = -1;
+    std::ofstream m_stream; // TODO
     int m_points = 0;
 };
+
+static int get2Pow(int max) {
+    std::default_random_engine eng(std::random_device {}());
+    std::uniform_int_distribution<int> dis(1, max); //not working with old mingw
+    const auto exp = dis(eng);
+    return static_cast<int>(std::pow(2, exp));
+    }
 
 int main(int argc, char** argv) {
     setDebug(DebugLevel::Info);
@@ -425,20 +423,40 @@ int main(int argc, char** argv) {
         Element(ui, "points").setHTML(std::to_string(points));
     }, [&](int points){
         gameOver = true;
-        //Element gameOver(ui, "gameover");
-        //gameOver.setAttribute("visibility", "visible");
+        Element(ui, "game_over_win").setAttribute("style", "visibility:visible");
+        Element(ui, "game_over_points").setHTML(std::to_string(points));
+    });
+
+    Element(ui, "restart").subscribe("click", [&](auto) {
+         Element(ui, "game_over_win").setAttribute("style", "visibility:hidden");
+         gameOver = false;
+         tilze.clear();
     });
 
     std::vector<std::pair<int, int>> vv;
+    auto it = vv.end();
     if(argc > 1) {
-        const auto f = GempyreUtils::slurp(argv[1]);
+        auto f = GempyreUtils::slurp(argv[1]);
+        f.erase(std::find(f.begin(), f.end(), '\0'), f.end());
         const auto ss = GempyreUtils::split<std::vector<std::string>>(f, '\n');
         for(const auto& v : ss) {
             const auto s = GempyreUtils::split<std::vector<std::string>>(v, ' ');
             vv.push_back(std::make_pair(GempyreUtils::to<int>(s[0]), GempyreUtils::to<int>(s[1])));
         }
-        tilze.setSelects(vv);
-    }
+        it = vv.begin();
+        ui.startTimer(500ms, false, [&](auto timerId) {
+            GempyreUtils::log(GempyreUtils::LogLevel::Info, "set", std::distance(it, vv.end()));
+                if(it == vv.end())
+                    ui.stopTimer(timerId);
+                else if(!tilze.canAdd())
+                    return;
+
+                tilze.select(it->second, it->first);
+                number.setHTML(std::to_string(it->first));
+                ++it;
+                });
+        }
+
 
     const auto do_resized = [&]() {
         const auto rect = ui.root().rect();
@@ -456,13 +474,18 @@ int main(int argc, char** argv) {
         do_resized();
     }, {}, 200ms);
 
-    ui.onOpen([&do_resized] {
+    ui.onOpen([&] {
         do_resized();
     });
 
     canvas.subscribe("click", [&](const auto& ev) {
+        if(gameOver)
+            return;
         const auto x = GempyreUtils::to<int>(ev.properties.at("clientX"));
-        const auto current_number = tilze.select(x);
+        const int value = get2Pow(6);
+        const Stripes stripes(tilze.pixelWidth());
+        const auto stripe = stripes.stripeAt(x);
+        const auto current_number = tilze.select(stripe, value);
         number.setHTML(std::to_string(current_number));
     }, {"clientX", "clientY"}, 200ms);
 
