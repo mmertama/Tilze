@@ -270,6 +270,7 @@ public:
     }
 
  private:
+    using CubePtr = std::shared_ptr<Cube>;
     void addCube(int number, int stripe, int start_y) {
         ++m_onActive;
         std::cerr << "addCube" << m_onRedraw << std::endl;
@@ -281,30 +282,30 @@ public:
             const auto ypos = yPos(m_cubes.level(stripe) - 1);
             const auto period = time(m_height, ypos);
             ani->animate(xpos, start_y, xpos, ypos, period, [ani, this]() {
-                merge(*ani);
+                merge(ani);
                 });
             m_animator.addAnimation(ani);
         }
         --m_onActive;
     }
 
-    void merge(Cube& cube) {
-        if(!cube.isAlive())
+    void merge(const CubePtr& cube) {
+        if(!cube->isAlive())
             return;
         ++m_onActive;
         std::cerr << "merge" << m_onRedraw << std::endl;
-        auto sisters = m_cubes.takeSisters(cube);
+        auto sisters = m_cubes.takeSisters(*cube);
         if(sisters.size() > 0) {
-            const auto value = cube.value();
+            const auto value = cube->value();
             m_points += value;
             mPoints(m_points);
-            cube.setValue(value + value);
+            cube->setValue(value + value);
 
             for(auto& sister : sisters) {
-                const auto periody = time(cube.y(), sister->y());
-                const auto periodx = time(cube.x(), sister->x());
+                const auto periody = time(cube->y(), sister->y());
+                const auto periodx = time(cube->x(), sister->x());
                 const auto period  = std::max(periodx, periody);
-                sister->animate(sister->x(), sister->y(), cube.x(), cube.y(), period, [&cube, this]() {
+                sister->animate(sister->x(), sister->y(), cube->x(), cube->y(), period, [cube, this]() {
                      merge(cube);
                 });
                 m_animator.addAnimation(sister);
@@ -338,7 +339,7 @@ public:
                 const auto ypos = yPos(level - 1);
                 const auto period = time(moved->y(), ypos);
                 moved->animate(moved->x(), moved->y(), moved->x(), ypos, period, [moved, this]() {
-                    merge(*moved);
+                    merge(moved);
                 });
                 m_animator.addAnimation(moved);
             }
@@ -446,8 +447,10 @@ int main(int argc, char** argv) {
         it = vv.begin();
         ui.startTimer(500ms, false, [&](auto timerId) {
             GempyreUtils::log(GempyreUtils::LogLevel::Info, "set", std::distance(it, vv.end()));
-                if(it == vv.end())
+                if(it == vv.end()) {
                     ui.stopTimer(timerId);
+                    return;
+                }
                 else if(!tilze.canAdd())
                     return;
 
