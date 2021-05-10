@@ -221,7 +221,9 @@ public:
         m_canvas(canvas),
         mPoints(pointsFunc),
         mGameOver(gameOverFunc),
-        m_animator(Animator<Cube>(&m_canvas.ui(), [this](){draw();})) {
+        m_animator(Animator<Cube>(&m_canvas.ui(), [this]() {
+            draw();
+    })) {
         m_stream.open(uniqName());
     }
 
@@ -244,8 +246,9 @@ public:
 
     void clear() {
         m_cubes.clear();
-        int m_current_number = 2;
+        m_current_number = 2;
         m_points = 0;
+        draw();
     }
 
     int select(int stripe, int value) {
@@ -310,6 +313,8 @@ public:
                 });
                 m_animator.addAnimation(sister);
             }
+            --m_onActive;
+            return;
         }
         const auto merged = !sisters.empty();
         squeeze();

@@ -19,7 +19,8 @@ public:
      int stripeWidth() const {return m_stripeWidth - MarginPx;}
      int start() const {return m_start;}
      int stripeAt(int xpos) const {
-         return (xpos * StripeCount) / m_w;
+         return std::min((xpos * StripeCount) / m_w, StripeCount - 1);
+
      }
      int stripePos(int stripe) const {
          return (m_start + MarginPx) + stripe * m_stripeWidth;
