@@ -4,13 +4,10 @@
 #include <random>
 
 #include "tilze.h"
-#include "animator.h"
 #include "cube.h"
 #include "view.h"
 #include "game.h"
 #include "autoplay.h"
-
-constexpr auto SlideSpeed = TimerPeriod * 40;
 
 namespace Gempyre {
     class FrameComposer;
@@ -23,19 +20,10 @@ static int get2Pow(int max) {
     return static_cast<int>(std::pow(2, exp));
     }
 
-void draw(Gempyre::FrameComposer& fc, const View& view, const Tilze& tilze, const Animator& animator)  {
-
-    view.draw(fc, tilze.selected());
-    const auto h = view.cubeHeight();
-    const auto w = view.stripeInWidth();
-
+void draw(Gempyre::FrameComposer& fc, int w, int h, const Tilze& tilze) {
     for(const auto& c : tilze) {
         if(!c->isAnimated())
             c->draw(fc, w, h);
-    }
-
-    for(const auto& a : animator) {
-        a->draw(fc, view.width(), view.height());
     }
 }
 
@@ -54,29 +42,29 @@ private:
 };
 
 int main(int argc, char** argv) {
-    View view;
 
-    ForwardFunction<int, int, int> select;
-    ForwardFunction<void, int, int> resize;
-    ForwardFunction<void> reset;
+    GameFunctions functions = {
+        ForwardFunction<void, int, int>(),
+        ForwardFunction<int, int>(),
+        ForwardFunction<void>(),
+        ForwardFunction<void, Gempyre::FrameComposer&, int, int>()
+    };
 
-    Game game(select, resize, reset);
-    Animator animator(game);
+    Game game(functions);
+
     Tilze tilze(game);
     AutoPlay auto_play(game, tilze);
+    View view;
 
-    select = [&](int x, int y) {
-        (void) y;
+    functions.select = [&](int stripe) {
         const int value = get2Pow(6);
-        const auto stripe = view.stripeAt(x);
         tilze.select(stripe, value);
         auto_play.add(stripe, value);
         return value;
 
     };
 
-    resize = [&](int width, int height) {
-       view.set(width, height);
+    functions.resize = [&](int width, int height) {
        for(auto it = tilze.begin() ; it != tilze.end(); ++it) {
            const auto xpos = view.stripePos(tilze.stripe(it));
            const auto ypos = tilze.level(it) * (height / RowCount);
@@ -84,23 +72,18 @@ int main(int argc, char** argv) {
        }
     };
 
-    reset = [&]() {
+    functions.reset = [&]() {
         tilze.clear();
     };
 
-    const auto animate = [&](const auto& cube, int stripe ,int level, auto finisher){
-        const auto ypos = view.cubeHeight() * level;
-        const auto x = view.stripePos(stripe);
-        cube->animate(cube->x(), cube->y(), x, ypos,  SlideSpeed, finisher);
-        animator.addAnimation(cube);
+    functions.draw = [&](Gempyre::FrameComposer& fc, int width, int height) {
+        ::draw(fc, width, height, tilze);
     };
 
     if(argc > 1)
         auto_play.play(argv[1]);
 
-    const auto draw = [&](Gempyre::FrameComposer& fc) {
-        ::draw(fc, view, tilze, animator);
-    };
+    game.run();
 
     return 0;
 }

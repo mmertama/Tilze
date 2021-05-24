@@ -34,7 +34,7 @@ public:
     void merge(const CubePtr& cube, int stripe, int level);
     void squeeze();
     //void draw() const;
-    void requestDraw();
+    //void requestDraw();
 private:
     Game& m_game;
     std::optional<int> m_selected_stripe = std::nullopt;

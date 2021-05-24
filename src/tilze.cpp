@@ -75,7 +75,7 @@ void Tilze::merge(const CubePtr& cube, int stripe, int level) {
     }
     const auto merged = !sisters.empty();
     squeeze();
-    requestDraw();
+    m_game.requestDraw();
     if(!merged && m_history) {
         m_game.after(200ms, [this]() {
             select(std::get<0>(*m_history), std::get<0>(*m_history));
@@ -107,6 +107,9 @@ void Tilze::squeeze() {
     GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed");
 }
 
+bool Tilze::canAdd() const {
+    return !m_active;
+}
 
 /*
 int Tilze::level(const Cube& cube) const {
@@ -120,19 +123,4 @@ int Tilze::level(const Cube& cube) const {
     }
     */
 
-/*
-void Tilze::requestDraw() {
-    GempyreUtils::log(GempyreUtils::LogLevel::Info, "requestDraw", m_onRedraw);
-    if(!m_onRedraw) {
-        m_onRedraw = true;
 
-        mAfter(0ms, [this]() {
-            GempyreUtils::log(GempyreUtils::LogLevel::Info, "requestDraw - act", m_animator.isActive());
-            if(!m_animator.isActive()) {
-                draw();
-                m_onRedraw = false;
-            }
-        });
-    }
-}
-*/

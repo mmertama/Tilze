@@ -9,6 +9,7 @@
 #include <gempyre_utils.h>
 
 using namespace Gempyre;
+constexpr auto SlideSpeed = TimerPeriod * 40;
 
 void Game::setPoints(int points) {
     Element(*m_ui, "points").setHTML(std::to_string(points));
@@ -26,23 +27,24 @@ void Game::setNumber(int value) {
 
 Game::~Game() {}
 
-Game::Game(const Select& select, const Resize& resize, const Reset& reset)  :
-    m_select(select),
-    m_resize(resize),
-    m_reset(reset),
+Game::Game(const GameFunctions& functions)  :
+    m_f(functions),
+    m_animator(*this),
     m_canvas(std::make_unique<Gempyre::CanvasElement>(*m_ui, "canvas")){
     Element(*m_ui, "restart").subscribe("click", [this](auto) {
          Element(*m_ui, "game_over_win").setAttribute("style", "visibility:hidden");
          m_gameOver = false;
-         m_reset();
+         m_f.reset();
     });
 
     m_canvas->subscribe("click", [this](const auto& ev) {
         if(m_gameOver)
             return;
         const auto x = GempyreUtils::to<int>(ev.properties.at("clientX"));
-        auto value = m_select(x, 0);
-        setNumber(value);
+        const auto stripe = m_view.stripeAt(x);
+        m_selected = m_f.select(stripe);
+        if(m_selected)
+            setNumber(*m_selected);
     }, {"clientX", "clientY"}, 200ms);
 
 
@@ -65,7 +67,8 @@ void Game::resize() {
     m_canvas->setAttribute("width", std::to_string(width));
     m_canvas->setAttribute("height", std::to_string(height));
 
-    m_resize(width, height);
+    m_view.set(width, height);
+    m_f.resize(width, height);
 
     draw();
 };
@@ -73,10 +76,38 @@ void Game::resize() {
 void Game::draw()  {
     FrameComposer fc;
     fc.fillStyle("black");
-    m_draw(fc);
+    m_view.draw(fc, m_selected);
+    const auto h = m_view.cubeHeight();
+    const auto w = m_view.stripeInWidth();
+    m_f.draw(fc, w, h);
+    for(const auto& a : m_animator) {
+        a->draw(fc, w, h);
+    }
     m_canvas->draw(fc);
+}
+void Game::animate(const CubePtr& cube, int stripe, int level, const std::function<void()>& finisher) {
+    const auto ypos = m_view.cubeHeight() * level;
+    const auto x = m_view.stripePos(stripe);
+    cube->animate(cube->x(), cube->y(), x, ypos,  SlideSpeed, finisher);
+    m_animator.addAnimation(cube);
 }
 
 void Game::run() {
     m_ui->run();
 }
+
+
+void Game::requestDraw() {
+    GempyreUtils::log(GempyreUtils::LogLevel::Info, "requestDraw", m_onRedraw);
+    if(!m_onRedraw) {
+        m_onRedraw = true;
+        m_ui->startTimer(0ms, true, [this]() {
+            GempyreUtils::log(GempyreUtils::LogLevel::Info, "requestDraw - act", m_animator.isActive());
+            if(!m_animator.isActive()) {
+                draw();
+                m_onRedraw = false;
+            }
+        });
+    }
+}
+

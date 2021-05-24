@@ -1,22 +1,33 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include "gameenv.h"
+#include "view.h"
+#include "animator.h"
 
 class Cube;
-class View;
 
 namespace Gempyre {
     class FrameComposer;
 }
 
-class Game : public GameEnv {
-    using CubePtr = std::shared_ptr<Cube>;
+using CubePtr = std::shared_ptr<Cube>;
+
+struct GameFunctions {
     using Resize = std::function<void (int width, int height)>;
-    using Select = std::function<int (int x, int y)>;
+    using Select = std::function<int (int stripe)>;
     using Reset = std::function<void ()>;
+    using Draw = std::function<void (Gempyre::FrameComposer& fc, int , int)>;
+    Resize resize;
+    Select select;
+    Reset reset;
+    Draw draw;
+};
+
+class Game : public GameEnv {
 public:
-    Game(const Select& select, const Resize& resize, const Reset& reset);
+    Game(const GameFunctions& f);
     ~Game();
     void animate(const CubePtr&, int, int, const std::function<void()>&);
     void setPoints(int points);
@@ -24,13 +35,15 @@ public:
     void setNumber(int number);
     void run();
     void draw() override;
+    void requestDraw();
 private:
     void resize();
-public:
-    Select m_select;
-    Resize m_resize;
-    Reset m_reset;
+private:
+    GameFunctions m_f;
+    View m_view;
+    Animator m_animator;
     std::unique_ptr<Gempyre::CanvasElement> m_canvas;
-    std::function<void (Gempyre::FrameComposer&)> m_draw;
     bool m_gameOver = false;
+    bool m_onRedraw = false;
+    std::optional<int> m_selected;
 };
