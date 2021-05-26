@@ -27,58 +27,50 @@ void draw(Gempyre::FrameComposer& fc, int w, int h, const Tilze& tilze) {
     }
 }
 
-// is there ready make way to do this
-template <typename R, typename ...Args>
-class ForwardFunction {
-public:
-    using Binded = std::function <R (Args...)>;
-    ForwardFunction() : m_f(std::make_shared<Binded>(nullptr)) {}
-    ForwardFunction(const ForwardFunction& other) = default;
-    ForwardFunction& operator=(const ForwardFunction& other) = default;
-    ForwardFunction& operator=(Binded&& f) {*m_f = std::move(f);return *this;}
-    R operator()(Args... args) {return (*m_f)(args...);}
+
+class TilzeObserver : public GameObserver {
+   public:
+
+    TilzeObserver& operator=(Tilze& tilze) {m_tilze = &tilze; return *this;}
+    TilzeObserver& operator=(AutoPlay& play) {m_play = &play; return *this;}
+
+    void draw(Gempyre::FrameComposer& fc, const View& view) {
+        ::draw(fc, view.width(), view.height(), *m_tilze);
+    }
+
+    void resize(const View& view) {
+        for(auto it = m_tilze->begin() ; it != m_tilze->end(); ++it) {
+            const auto xpos = view.stripePos(m_tilze->stripe(it));
+            const auto ypos = m_tilze->level(it) * (view.height() / RowCount);
+            (*it)->repos(xpos, ypos);
+        }
+    }
+
+    int select(int stripe) {
+        const int value = get2Pow(6);
+        m_tilze->select(stripe, value);
+        m_play->add(stripe, value);
+        return value;
+    }
+
+    void reset() {
+         m_tilze->clear();
+    }
 private:
-    std::shared_ptr<Binded> m_f;
+    Tilze* m_tilze;
+    AutoPlay* m_play;
 };
+
 
 int main(int argc, char** argv) {
 
-    GameFunctions functions = {
-        ForwardFunction<void, int, int>(),
-        ForwardFunction<int, int>(),
-        ForwardFunction<void>(),
-        ForwardFunction<void, Gempyre::FrameComposer&, int, int>()
-    };
-
-    Game game(functions);
+    TilzeObserver to;
+    Game game(to);
 
     Tilze tilze(game);
     AutoPlay auto_play(game, tilze);
-    View view;
-
-    functions.select = [&](int stripe) {
-        const int value = get2Pow(6);
-        tilze.select(stripe, value);
-        auto_play.add(stripe, value);
-        return value;
-
-    };
-
-    functions.resize = [&](int width, int height) {
-       for(auto it = tilze.begin() ; it != tilze.end(); ++it) {
-           const auto xpos = view.stripePos(tilze.stripe(it));
-           const auto ypos = tilze.level(it) * (height / RowCount);
-           (*it)->repos(xpos, ypos);
-       }
-    };
-
-    functions.reset = [&]() {
-        tilze.clear();
-    };
-
-    functions.draw = [&](Gempyre::FrameComposer& fc, int width, int height) {
-        ::draw(fc, width, height, tilze);
-    };
+    to = auto_play;
+    to = tilze;
 
     if(argc > 1)
         auto_play.play(argv[1]);

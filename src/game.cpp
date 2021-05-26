@@ -27,14 +27,14 @@ void Game::setNumber(int value) {
 
 Game::~Game() {}
 
-Game::Game(const GameFunctions& functions)  :
-    m_f(functions),
+Game::Game(GameObserver& obs)  :
+    m_obs(obs),
     m_animator(*this),
     m_canvas(std::make_unique<Gempyre::CanvasElement>(*m_ui, "canvas")){
     Element(*m_ui, "restart").subscribe("click", [this](auto) {
          Element(*m_ui, "game_over_win").setAttribute("style", "visibility:hidden");
          m_gameOver = false;
-         m_f.reset();
+         m_obs.reset();
     });
 
     m_canvas->subscribe("click", [this](const auto& ev) {
@@ -42,7 +42,7 @@ Game::Game(const GameFunctions& functions)  :
             return;
         const auto x = GempyreUtils::to<int>(ev.properties.at("clientX"));
         const auto stripe = m_view.stripeAt(x);
-        m_selected = m_f.select(stripe);
+        m_selected = m_obs.select(stripe);
         if(m_selected)
             setNumber(*m_selected);
     }, {"clientX", "clientY"}, 200ms);
@@ -57,6 +57,10 @@ Game::Game(const GameFunctions& functions)  :
     });
 }
 
+int Game::stripePos(int stripe) const {
+    return m_view.stripePos(stripe);
+}
+
 void Game::resize() {
     const auto rect = m_ui->root().rect();
     assert(rect);
@@ -68,7 +72,7 @@ void Game::resize() {
     m_canvas->setAttribute("height", std::to_string(height));
 
     m_view.set(width, height);
-    m_f.resize(width, height);
+    m_obs.resize(m_view);
 
     draw();
 };
@@ -79,7 +83,7 @@ void Game::draw()  {
     m_view.draw(fc, m_selected);
     const auto h = m_view.cubeHeight();
     const auto w = m_view.stripeInWidth();
-    m_f.draw(fc, w, h);
+    m_obs.draw(fc, m_view);
     for(const auto& a : m_animator) {
         a->draw(fc, w, h);
     }
