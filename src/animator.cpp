@@ -1,4 +1,5 @@
 #include "animator.h"
+#include <cassert>
 
 /*
 int Tilze::time(int from, int to) const {
@@ -10,23 +11,24 @@ int Tilze::yPos(int level) const {
 }
 */
 
-void Animated::animate(int sx, int sy, int ex, int ey, const std::chrono::milliseconds& speed, const std::function<void ()>& finished) {
+void Animated::animate(int ex, int ey, const std::chrono::milliseconds& speed, const std::function<void ()>& finished) {
     assert(finished);
     mFinished = finished;
 
-    m_x = sx;
-    m_y = sy;
     m_end_x = ex;
     m_end_y = ey;
 
-    const auto period  = speed * std::max(std::abs(sx - ex), std::abs(sy - ey));
+    const auto ax = std::abs(m_x - m_end_x);
+    const auto ay = std::abs(m_y - m_end_y);
+
+    const auto period  = speed * std::max(ax, ay);
 
     const auto tics = period.count() / static_cast<double>(TimerPeriod.count());
     if(tics > 0) {
-        auto dx = std::abs(ex - sx) / tics;
-        auto dy = std::abs(ey - sy) / tics;
-        m_dx = dx > 0 ? dx * std::abs(ex - sx) / (ex - sx) : 0;
-        m_dy = dy > 0 ? dy * std::abs(ey - sy) / (ey - sy) : 0;
+        auto dx = ax / tics;
+        auto dy = ay / tics;
+        m_dx = dx > 0 ? dx * ax / (m_end_x - m_x) : 0;
+        m_dy = dy > 0 ? dy * ax / (m_end_y - m_y) : 0;
         } else {
             m_x = m_end_x;
             m_y = m_end_y;

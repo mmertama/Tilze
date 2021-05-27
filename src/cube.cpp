@@ -18,11 +18,11 @@ static void roundRect(Gempyre::FrameComposer& fc, const Gempyre::Element::Rect& 
   fc.fill();
 }
 
-void Cube::draw(Gempyre::FrameComposer& fc, int w, int h) const {
-    roundRect(fc, {static_cast<int>(m_x), static_cast<int>(m_y), w, h}, "cyan", 5);
+void Cube::draw(Gempyre::FrameComposer& fc) const {
+    roundRect(fc, {x(), y(), width(), height()}, "cyan", 5);
     fc.fillStyle("black");
     fc.font("bold 24px arial");
     fc.textBaseline("middle");
     fc.textAlign("center");
-    fc.fillText(std::to_string(m_value), m_x + w / 2, m_y + h / 2);
+    fc.fillText(std::to_string(m_value), m_x + m_width / 2., m_y + m_height / 2.);
 }

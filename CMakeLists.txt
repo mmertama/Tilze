@@ -18,7 +18,6 @@ add_executable(${PROJECT_NAME}
     include/cube.h
     include/table.h
     include/tilze.h
-    include/drawable.h
     include/sparseiterator.h
     include/game.h
     include/gameenv.h

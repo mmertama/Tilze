@@ -20,13 +20,6 @@ static int get2Pow(int max) {
     return static_cast<int>(std::pow(2, exp));
     }
 
-void draw(Gempyre::FrameComposer& fc, int w, int h, const Tilze& tilze) {
-    for(const auto& c : tilze) {
-        if(!c->isAnimated())
-            c->draw(fc, w, h);
-    }
-}
-
 
 class TilzeObserver : public GameObserver {
    public:
@@ -35,14 +28,20 @@ class TilzeObserver : public GameObserver {
     TilzeObserver& operator=(AutoPlay& play) {m_play = &play; return *this;}
 
     void draw(Gempyre::FrameComposer& fc, const View& view) {
-        ::draw(fc, view.width(), view.height(), *m_tilze);
+
+        for(const auto& c : *m_tilze) {
+            if(!c->isAnimated())
+                c->draw(fc);
+        }
     }
 
     void resize(const View& view) {
+        const auto h = view.height() / RowCount;
+        const auto w = view.stripeInWidth();
         for(auto it = m_tilze->begin() ; it != m_tilze->end(); ++it) {
-            const auto xpos = view.stripePos(m_tilze->stripe(it));
-            const auto ypos = m_tilze->level(it) * (view.height() / RowCount);
-            (*it)->repos(xpos, ypos);
+            const auto x_pos = view.stripePos(m_tilze->stripe(it));
+            const auto y_pos = m_tilze->level(it) * h;
+                (*it)->setExtents(x_pos, y_pos, w, h);
         }
     }
 

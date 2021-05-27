@@ -41,10 +41,9 @@ Game::Game(GameObserver& obs)  :
         if(m_gameOver)
             return;
         const auto x = GempyreUtils::to<int>(ev.properties.at("clientX"));
-        const auto stripe = m_view.stripeAt(x);
-        m_selected = m_obs.select(stripe);
-        if(m_selected)
-            setNumber(*m_selected);
+        m_selected = m_view.stripeAt(x);
+        const auto value = m_obs.select(*m_selected);
+        setNumber(value);
     }, {"clientX", "clientY"}, 200ms);
 
 
@@ -81,18 +80,16 @@ void Game::draw()  {
     FrameComposer fc;
     fc.fillStyle("black");
     m_view.draw(fc, m_selected);
-    const auto h = m_view.cubeHeight();
-    const auto w = m_view.stripeInWidth();
     m_obs.draw(fc, m_view);
     for(const auto& a : m_animator) {
-        a->draw(fc, w, h);
+        a->draw(fc);
     }
     m_canvas->draw(fc);
 }
 void Game::animate(const CubePtr& cube, int stripe, int level, const std::function<void()>& finisher) {
     const auto ypos = m_view.cubeHeight() * level;
     const auto x = m_view.stripePos(stripe);
-    cube->animate(cube->x(), cube->y(), x, ypos,  SlideSpeed, finisher);
+    cube->animate(x, ypos,  SlideSpeed, finisher);
     m_animator.addAnimation(cube);
 }
 

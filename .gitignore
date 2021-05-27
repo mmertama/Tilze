@@ -2,3 +2,5 @@
 build
 CMakeLists.txt.user
 builds
+.idea
+cmake-build-debug

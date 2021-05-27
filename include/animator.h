@@ -17,7 +17,7 @@ namespace Gempyre {
 class Animated {
 public:
     virtual ~Animated() = default;
-    void animate(int sx, int sy, int ex, int ey, const std::chrono::milliseconds& speed, const std::function<void ()>& finished);
+    void animate(int end_x, int end_y, const std::chrono::milliseconds& speed, const std::function<void ()>& finished);
     void finish() ;
 
     bool isAnimated()  const {
@@ -40,20 +40,25 @@ public:
         return true;    
     }
 
-    void repos(int x, int y) {
+    void setExtents(int x, int y, int w, int h) {
         m_x = x;
         m_y = y;
+        m_width = w;
+        m_height = h;
     }
 
     int x() const {return static_cast<int>(m_end_x);}
     int y() const {return static_cast<int>(m_end_y);}
+    int width() const {return static_cast<int>(m_width);}
+    int height() const {return static_cast<int>(m_height);}
 
-    virtual void draw(Gempyre::FrameComposer& fc, int width, int height) const = 0;
+    virtual void draw(Gempyre::FrameComposer& fc) const = 0;
 protected:
     std::function<void()> mFinished;
     double m_x, m_y;
     double m_end_x, m_end_y;
     double m_dx = 0, m_dy = 0;
+    double m_width, m_height;
 };
 
 class Animator {

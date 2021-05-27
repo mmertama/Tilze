@@ -3,6 +3,7 @@
 #include "sparseiterator.h"
 #include <memory>
 #include <array>
+#include <cassert>
 
 template <class T, int ROWS, int STRIPES>
 class Table {

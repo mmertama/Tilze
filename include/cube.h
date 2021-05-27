@@ -1,6 +1,7 @@
 #pragma once
 
 #include "animator.h"
+#include <cassert>
 
 namespace Gempyre {
     class FrameComposer;
@@ -11,7 +12,7 @@ public:
 
     Cube(int value/*, int stripe, int level*/) : m_value(value)/*, m_stripe(stripe), m_level(level)*/ {}
 
-    void draw(Gempyre::FrameComposer& fc, int w, int h) const override;
+    void draw(Gempyre::FrameComposer& fc) const override;
 
     void kill() {
         assert(m_alive);
