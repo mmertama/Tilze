@@ -8,19 +8,9 @@ Tilze::Tilze(Game& game) :
     m_game(game) {
 }
 
-
-bool Tilze::isActive() const {
-    return m_active;
-}
-
 void Tilze::setHistory(int stripe, int value) {
     m_history = std::make_optional(std::tuple<int, int>{stripe, value});
 }
-
-int Tilze::current() const {
-    return m_current_number;
-}
-
 
 void Tilze::clear() {
     m_cubes.clear();
@@ -29,20 +19,22 @@ void Tilze::clear() {
     m_game.draw();
 }
 
-void Tilze::select(int stripe, int value) {
+CubePos Tilze::select(int stripe, int value) {
     m_history = std::nullopt;
     m_selected_stripe = std::make_optional(stripe);
-    addCube(m_current_number, stripe, RowCount + 1);
-     m_game.draw();
+    const auto r = addCube(m_current_number, stripe, RowCount + 1);
     m_current_number = value;
+    return r;
 }
 
-void Tilze::addCube(int number, int stripe, int level) {
+CubePos Tilze::addCube(int number, int stripe, int level) {
     //std::cerr << "addCube" << m_onRedraw << std::endl;
     const auto ani = m_cubes.add(number, stripe);
     if(ani) {
         m_active = true;
-        squeeze();
+        m_game.after(0ms, [this]() {
+            squeeze();
+        });
        /* const Stripes stripes(m_width);
         const auto xpos = stripes.stripePos(stripe);
         //-1 as this one was added
@@ -53,6 +45,7 @@ void Tilze::addCube(int number, int stripe, int level) {
             });
         m_animator.addAnimation(ani);*/
     }
+    return ani;
 }
 
 void Tilze::merge(const CubePtr& cube, int stripe, int level) {

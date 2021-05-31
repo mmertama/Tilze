@@ -44,14 +44,14 @@ public:
     Table() = default;
     Table(const Table&) = delete;
     Table& operator=(const Table&) = delete;
-    value_type add(int value, int stripe) {
+    std::optional<std::tuple<value_type, int, int>> add(int value, int stripe) {
         const auto sz = size(stripe);
         if(sz >= ROWS)
-            return nullptr;
+            return std::nullopt;
         const auto p = pos(stripe, sz);
         assert(!m_cubes[p]);
         m_cubes[p] = std::make_shared<T>(value);
-        return m_cubes[p];
+        return std::make_tuple(m_cubes[p], stripe, sz);
     }
 
     value_type move(int stripe, int row) {
@@ -98,7 +98,6 @@ public:
     bool has(int col, int row) const {
         return at(col, row).operator bool();
     }
-
 
     std::vector<value_type> takeSisters(const T& cube, int stripe, int level) {
         std::vector<value_type> vec;

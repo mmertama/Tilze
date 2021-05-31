@@ -18,7 +18,7 @@ class Animated {
 public:
     virtual ~Animated() = default;
     void animate(int end_x, int end_y, const std::chrono::milliseconds& speed, const std::function<void ()>& finished);
-    void finish() ;
+    void finish();
 
     bool isAnimated()  const {
         return mFinished != nullptr;

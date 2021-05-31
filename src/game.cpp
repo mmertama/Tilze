@@ -42,8 +42,22 @@ Game::Game(GameObserver& obs)  :
             return;
         const auto x = GempyreUtils::to<int>(ev.properties.at("clientX"));
         m_selected = m_view.stripeAt(x);
-        const auto value = m_obs.select(*m_selected);
-        setNumber(value);
+        const auto ptr = m_obs.select(*m_selected);
+        if(ptr)
+        {
+            auto cube = std::get<CubePtr>(*ptr);
+            const auto stripe = std::get<1>(*ptr);
+            assert(stripe == *m_selected);
+            const auto level = std::get<2>(*ptr);
+            const auto h = m_view.height() / RowCount;
+            const auto w = m_view.stripeInWidth();
+            const auto x_pos = m_view.stripePos(stripe);
+            const auto y_pos = m_view.height();
+            cube->setExtents(x_pos, y_pos, w, h);
+            cube->animate(x_pos, level * cube->height(), 2s, [](){});
+            m_animator.addAnimation(cube);
+            setNumber(cube->value());
+        }
     }, {"clientX", "clientY"}, 200ms);
 
 
@@ -56,9 +70,11 @@ Game::Game(GameObserver& obs)  :
     });
 }
 
+/*
 int Game::stripePos(int stripe) const {
     return m_view.stripePos(stripe);
 }
+*/
 
 void Game::resize() {
     const auto rect = m_ui->root().rect();
@@ -94,9 +110,8 @@ void Game::animate(const CubePtr& cube, int stripe, int level, const std::functi
 }
 
 void Game::run() {
-    m_ui->run();
+                                                                                                                                m_ui->run();
 }
-
 
 void Game::requestDraw() {
     GempyreUtils::log(GempyreUtils::LogLevel::Info, "requestDraw", m_onRedraw);

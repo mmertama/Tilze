@@ -13,12 +13,13 @@ namespace Gempyre {
 }
 
 using CubePtr = std::shared_ptr<Cube>;
+using CubePos = std::optional<std::tuple<CubePtr, int, int>>;
 
 class GameObserver {
 public:
     virtual void draw(Gempyre::FrameComposer& fc, const View& view) = 0;
     virtual void resize(const View& view) = 0;
-    virtual int select(int stripe) = 0;
+    virtual CubePos select(int stripe) = 0;
     virtual void reset() = 0;
 };
 
@@ -33,7 +34,7 @@ public:
     void run();
     void draw() override;
     void requestDraw();
-    int stripePos(int stripe) const;
+   // int stripePos(int stripe) const;
 private:
     void resize();
 private:
