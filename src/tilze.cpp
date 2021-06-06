@@ -19,31 +19,25 @@ void Tilze::clear() {
     m_game.draw();
 }
 
-CubePos Tilze::select(int stripe, int value) {
+Tilze::CubePos Tilze::select(int stripe, int value) {
     m_history = std::nullopt;
     m_selected_stripe = std::make_optional(stripe);
-    const auto r = addCube(m_current_number, stripe, RowCount + 1);
+    const auto r = addCube(m_current_number, stripe);
     m_current_number = value;
     return r;
 }
 
-CubePos Tilze::addCube(int number, int stripe, int level) {
+Tilze::CubePos Tilze::addCube(int number, int stripe) {
     //std::cerr << "addCube" << m_onRedraw << std::endl;
     const auto ani = m_cubes.add(number, stripe);
     if(ani) {
         m_active = true;
-        m_game.after(0ms, [this]() {
-            squeeze();
+        auto ptr = std::get<CubePtr>(*ani);
+        const auto s = std::get<1>(*ani);
+        const auto l = std::get<2>(*ani);
+        std::get<0>(*ani)->setPostAnimation([this, ptr, s, l]() {
+            merge(ptr, s, l);
         });
-       /* const Stripes stripes(m_width);
-        const auto xpos = stripes.stripePos(stripe);
-        //-1 as this one was added
-        const auto ypos = yPos(m_cubes.level(stripe) - 1);
-        const auto period = time(m_height, ypos);
-        ani->animate(xpos, start_y, xpos, ypos, period, [ani, this]() {
-            merge(ani);
-            });
-        m_animator.addAnimation(ani);*/
     }
     return ani;
 }
@@ -60,9 +54,10 @@ void Tilze::merge(const CubePtr& cube, int stripe, int level) {
         cube->setValue(value + value);
 
         for(auto& sister : sisters) {
-            m_game.animate(sister, cube->x(), cube->y(), [&, this] () {
+            sister->setPostAnimation([&, this]() {
                 merge(cube, stripe, level);
             });
+            m_game.animate(sister, cube->x(), cube->y());
         }
         return;
     }
@@ -92,9 +87,10 @@ void Tilze::squeeze() {
         }
         if(next_level < level) {
             auto moved = m_cubes.move(stripe, next_level); //after  this c is null
-            m_game.animate(moved, stripe, next_level, [&, this]() {
+            moved->setPostAnimation([moved, stripe, next_level, this]() {
                 merge(moved, stripe, next_level);
             });
+            m_game.animate(moved, stripe, next_level);
         }
     }
     GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed");

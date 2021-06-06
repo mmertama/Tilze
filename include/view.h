@@ -40,7 +40,7 @@ public:
     }
 
     int stripePos(int stripe) const {
-        return (left() + MarginPx) + stripe * stripeInWidth();
+        return (left() + MarginPx) + stripe * stripeOutWidth();
     }
 
     int cubeHeight() const {

@@ -45,7 +45,7 @@ Game::Game(GameObserver& obs)  :
         const auto ptr = m_obs.select(*m_selected);
         if(ptr)
         {
-            auto cube = std::get<CubePtr>(*ptr);
+            auto cube = std::get<GameObserver::CubePtr>(*ptr);
             const auto stripe = std::get<1>(*ptr);
             assert(stripe == *m_selected);
             const auto level = std::get<2>(*ptr);
@@ -54,9 +54,9 @@ Game::Game(GameObserver& obs)  :
             const auto x_pos = m_view.stripePos(stripe);
             const auto y_pos = m_view.height();
             cube->setExtents(x_pos, y_pos, w, h);
-            cube->animate(x_pos, level * cube->height(), 2s, [](){});
+            cube->animate(x_pos, level * cube->height(), 2s);
             m_animator.addAnimation(cube);
-            setNumber(cube->value());
+            setNumber(std::get<3>(*ptr));
         }
     }, {"clientX", "clientY"}, 200ms);
 
@@ -69,12 +69,6 @@ Game::Game(GameObserver& obs)  :
         this->resize();
     });
 }
-
-/*
-int Game::stripePos(int stripe) const {
-    return m_view.stripePos(stripe);
-}
-*/
 
 void Game::resize() {
     const auto rect = m_ui->root().rect();
@@ -96,21 +90,22 @@ void Game::draw()  {
     FrameComposer fc;
     fc.fillStyle("black");
     m_view.draw(fc, m_selected);
-    m_obs.draw(fc, m_view);
+    m_obs.draw(fc);
     for(const auto& a : m_animator) {
         a->draw(fc);
     }
     m_canvas->draw(fc);
 }
-void Game::animate(const CubePtr& cube, int stripe, int level, const std::function<void()>& finisher) {
+
+void Game::animate(const GameObserver::CubePtr& cube, int stripe, int level) {
     const auto ypos = m_view.cubeHeight() * level;
     const auto x = m_view.stripePos(stripe);
-    cube->animate(x, ypos,  SlideSpeed, finisher);
+    cube->animate(x, ypos,  SlideSpeed);
     m_animator.addAnimation(cube);
 }
 
 void Game::run() {
-                                                                                                                                m_ui->run();
+    m_ui->run();
 }
 
 void Game::requestDraw() {

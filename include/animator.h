@@ -8,7 +8,7 @@
 
 using namespace std::chrono_literals;
 
-constexpr auto TimerPeriod = 30ms;
+constexpr auto TimerPeriod{60ms};
 
 namespace Gempyre {
     class FrameComposer;
@@ -17,38 +17,20 @@ namespace Gempyre {
 class Animated {
 public:
     virtual ~Animated() = default;
-    void animate(int end_x, int end_y, const std::chrono::milliseconds& speed, const std::function<void ()>& finished);
+    void animate(int end_x, int end_y, const std::chrono::milliseconds& speed);
     void finish();
+    void setPostAnimation(const std::function<void ()>& finished);
 
     bool isAnimated()  const {
         return mFinished != nullptr;
     }
 
-    bool inc() {
-        m_x += m_dx;
-        m_y += m_dy;
-        if(
-            (m_dx > 0 && m_x >= m_end_x) ||
-            (m_dx < 0 && m_x <= m_end_x) ||
-            (m_dy > 0 && m_y >= m_end_y) ||
-            (m_dy < 0 && m_y <= m_end_y) ||
-            (m_dx == 0 && m_dy == 0)) {
-            m_x = m_end_x;
-            m_y = m_end_y;
-            return false;
-        }
-        return true;    
-    }
+    bool inc();
 
-    void setExtents(int x, int y, int w, int h) {
-        m_x = x;
-        m_y = y;
-        m_width = w;
-        m_height = h;
-    }
+    void setExtents(int x, int y, int w, int h);
 
-    int x() const {return static_cast<int>(m_end_x);}
-    int y() const {return static_cast<int>(m_end_y);}
+    int x() const {return static_cast<int>(m_x);}
+    int y() const {return static_cast<int>(m_y);}
     int width() const {return static_cast<int>(m_width);}
     int height() const {return static_cast<int>(m_height);}
 
@@ -57,15 +39,14 @@ protected:
     std::function<void()> mFinished;
     double m_x, m_y;
     double m_end_x, m_end_y;
-    double m_dx = 0, m_dy = 0;
+    double m_dx{0}, m_dy{0};
     double m_width, m_height;
 };
 
 class Animator {
 public:
     using value_type = std::shared_ptr<Animated>;
-    Animator(GameEnv& env) : m_env(env) {
-    }
+    Animator(GameEnv& env) : m_env(env) {}
 
     void addAnimation(const value_type& ani);
 

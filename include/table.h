@@ -102,11 +102,11 @@ public:
     std::vector<value_type> takeSisters(const T& cube, int stripe, int level) {
         std::vector<value_type> vec;
         vec.reserve(5);
-        const auto check = [&, this](int s, int l) {
-            auto c = at(stripe, level);
+        const auto check = [&vec, &cube, this](int s, int l) {
+            auto c = at(s, l);
             if(!c || !c->isAlive() || c->value() != cube.value())
                 return;
-            auto taken = take(stripe, level);
+            auto taken = take(s, l);
             taken->kill();
             vec.emplace_back(taken);
         };

@@ -27,7 +27,7 @@ public:
     int level(const IT& it) const { return m_cubes.row(it);}
     void setHistory(int stripe, int value);
  private:
-    CubePos addCube(int number, int stripe, int start_y);
+    CubePos addCube(int number, int stripe);
     void merge(const CubePtr& cube, int stripe, int level);
     void squeeze();
 private:

@@ -11,9 +11,30 @@ int Tilze::yPos(int level) const {
 }
 */
 
-void Animated::animate(int ex, int ey, const std::chrono::milliseconds& speed, const std::function<void ()>& finished) {
-    assert(finished);
-    mFinished = finished;
+bool Animated::inc() {
+    m_x += m_dx;
+    m_y += m_dy;
+    if(
+        (m_dx > 0 && m_x >= m_end_x) ||
+        (m_dx < 0 && m_x <= m_end_x) ||
+        (m_dy > 0 && m_y >= m_end_y) ||
+        (m_dy < 0 && m_y <= m_end_y) ||
+        (m_dx == 0 && m_dy == 0)) {
+        m_x = m_end_x;
+        m_y = m_end_y;
+        return false;
+    }
+    return true;
+}
+
+void Animated::setExtents(int x, int y, int w, int h) {
+    m_x = x;
+    m_y = y;
+    m_width = w;
+    m_height = h;
+}
+
+void Animated::animate(int ex, int ey, const std::chrono::milliseconds& speed) {
 
     m_end_x = ex;
     m_end_y = ey;
@@ -22,17 +43,23 @@ void Animated::animate(int ex, int ey, const std::chrono::milliseconds& speed, c
     const auto ay = std::abs(m_y - m_end_y);
 
     const auto period  = speed * std::max(ax, ay);
+    const auto dur = period / TimerPeriod.count();
 
-    const auto tics = period.count() / static_cast<double>(TimerPeriod.count());
+    const auto tics = std::chrono::duration<double>(dur).count();
     if(tics > 0) {
         auto dx = ax / tics;
         auto dy = ay / tics;
         m_dx = dx > 0 ? dx * ax / (m_end_x - m_x) : 0;
-        m_dy = dy > 0 ? dy * ax / (m_end_y - m_y) : 0;
+        m_dy = dy > 0 ? dy * ay / (m_end_y - m_y) : 0;
         } else {
             m_x = m_end_x;
             m_y = m_end_y;
         }
+}
+
+void Animated::setPostAnimation(const std::function<void ()> &finished) {
+    assert(!mFinished);
+    mFinished = finished;
 }
 
 void Animated::finish() {
