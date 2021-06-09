@@ -54,11 +54,11 @@ public:
         return std::make_tuple(m_cubes[p], stripe, sz);
     }
 
-    value_type move(int stripe, int row) {
-        const auto p = pos(stripe, row);
+    value_type move(int stripe_from, int row_from, int stripe_to, int row_to) {
+        const auto p = pos(stripe_to, row_to);
         assert(!m_cubes[p]);
-        const auto l = level(stripe);
-        m_cubes[p] = take(stripe, l);
+        m_cubes[p] = take(stripe_from, row_from);
+        assert(m_cubes[p]);
         return m_cubes[p];
     }
 
@@ -93,15 +93,15 @@ public:
         }
     }
 
-    int level(int stripe) const {return size(stripe);}
+  //  int lastFree(int stripe) const {return size(stripe);}
 
     bool has(int col, int row) const {
         return at(col, row).operator bool();
     }
 
-    std::vector<value_type> takeSisters(const T& cube, int stripe, int level) {
+    auto takeSisters(const T& cube, int stripe, int level) {
         std::vector<value_type> vec;
-        vec.reserve(5);
+        vec.reserve(4);
         const auto check = [&vec, &cube, this](int s, int l) {
             auto c = at(s, l);
             if(!c || !c->isAlive() || c->value() != cube.value())
@@ -122,19 +122,21 @@ public:
     }
 
     template<class IT>
-    int row(const IT& it) const {
-        return distance(it) / ROWS;
+    int column(const IT& it) const {
+        const int d = distance(it);
+        return d / ROWS;
     }
 
     template<class IT>
-    int column(const IT& it) const {
-        return distance(it) % ROWS;
+    int row(const IT& it) const {
+        const int d = distance(it);
+        return d % ROWS;
     }
 
 private:
      template<class IT>
     int distance(const IT& it) const {
-        return &(*m_cubes.begin()) - &(*it);
+        return &(*it) - &(*m_cubes.begin());
     }
 private:
     ArrayType m_cubes;

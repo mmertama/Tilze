@@ -46,18 +46,18 @@ void Tilze::merge(const CubePtr& cube, int stripe, int level) {
     if(!cube->isAlive())
         return;
     //std::cerr << "merge" << m_onRedraw << std::endl;
-    auto sisters = m_cubes.takeSisters(*cube, stripe, level);
+    const auto sisters = m_cubes.takeSisters(*cube, stripe, level);
     if(sisters.size() > 0) {
         const auto value = cube->value();
         m_points += value;
         m_game.setPoints(m_points);
         cube->setValue(value + value);
 
-        for(auto& sister : sisters) {
-            sister->setPostAnimation([&, this]() {
+        for(const auto& sister : sisters) {
+            sister->setPostAnimation([cube, stripe, level, this]() {
                 merge(cube, stripe, level);
             });
-            m_game.animate(sister, cube->x(), cube->y());
+            m_game.animate(sister, stripe, level);
         }
         return;
     }
@@ -86,7 +86,7 @@ void Tilze::squeeze() {
             --next_level; //how up to go
         }
         if(next_level < level) {
-            auto moved = m_cubes.move(stripe, next_level); //after  this c is null
+            const auto moved = m_cubes.move(stripe, level, stripe, next_level); //after  this c is null
             moved->setPostAnimation([moved, stripe, next_level, this]() {
                 merge(moved, stripe, next_level);
             });
