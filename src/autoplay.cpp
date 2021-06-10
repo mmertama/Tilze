@@ -1,5 +1,6 @@
 #include "autoplay.h"
 #include "tilze.h"
+#include "cube.h"
 #include <filesystem>
 #include <gempyre_utils.h>
 #include <chrono>
@@ -34,20 +35,24 @@ void AutoPlay::play(const std::string& name) {
 
     m_it = m_playVec.begin();
 
-    m_timer = m_env.startPeriodic(500ms, [this]() {
+    m_timer = m_env.startPeriodic(100ms, [this]() {
         GempyreUtils::log(GempyreUtils::LogLevel::Info, "set", std::distance(m_it, m_playVec.end()));
             if(m_it == m_playVec.end()) {
                 m_env.stopPeriodic(m_timer);
                 m_timer = 0;
                 return;
             }
-            else if(m_tilze.canAdd()) {
-                m_tilze.setHistory(m_it->second, m_it->first);
+            else if(!m_tilze.canAdd()) {
+                //m_tilze.setHistory(m_it->second, m_it->first);
                 return;
             }
 
-            m_tilze.select(m_it->second, m_it->first);
-            m_env.setNumber(m_it->first);
+            const auto c = m_tilze.select(m_it->second, m_it->first);
+            m_env.add(GameObserver::CubeInfo{{
+                                             std::get<0>(*c),
+                                             std::get<1>(*c),
+                                             std::get<2>(*c),
+                                             std::get<0>(*c)->value()}});
             ++m_it;
             });
 }

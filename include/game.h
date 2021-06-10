@@ -33,6 +33,7 @@ public:
     void run();
     void draw() override;
     void requestDraw();
+    void add(GameObserver::CubeInfo ptr);
 private:
     void resize();
 private:
