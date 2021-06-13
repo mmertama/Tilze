@@ -15,6 +15,7 @@ namespace Gempyre {
 }
 
 class Animated {
+    enum {None, Animation = 0x1};
 public:
     virtual ~Animated() = default;
     void animate(int end_x, int end_y, const std::chrono::milliseconds& speed);
@@ -22,7 +23,7 @@ public:
     void setPostAnimation(const std::function<void ()>& finished);
 
     bool isAnimated()  const {
-        return mFinished != nullptr;
+        return m_state & Animation;
     }
 
     bool inc();
@@ -36,6 +37,7 @@ public:
 
     virtual void draw(Gempyre::FrameComposer& fc) const = 0;
 protected:
+    int m_state = 0;
     std::function<void()> mFinished;
     double m_x, m_y;
     double m_end_x, m_end_y;
@@ -50,6 +52,8 @@ public:
 
     void addAnimation(const value_type& ani);
 
+    void setPostAnimation(const std::function<void ()>& finished);
+
     auto begin() const {return m_animates.begin();}
     auto end() const {return m_animates.end();}
 
@@ -58,6 +62,7 @@ public:
     }
 private:
     GameEnv& m_env;
+    std::function<void()> mFinished;
     std::list<value_type> m_animates;
     int m_timerId = 0;
 };

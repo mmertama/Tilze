@@ -3,6 +3,7 @@
 #include "animator.h"
 #include "cube.h"
 #include "game.h"
+#include "gameobserver.h"
 
 #include <gempyre_graphics.h>
 #include <gempyre.h>
@@ -27,7 +28,7 @@ void Game::setNumber(int value) {
 
 Game::~Game() {}
 
-void Game::add(GameObserver::CubeInfo ptr) {
+void Game::add(CubeInfo ptr) {
     auto cube = std::get<GameObserver::CubePtr>(*ptr);
     const auto stripe = std::get<1>(*ptr);
      *m_selected = stripe; //autoplay can make them diffrent
@@ -37,7 +38,7 @@ void Game::add(GameObserver::CubeInfo ptr) {
     const auto x_pos = m_view.stripePos(stripe);
     const auto y_pos = m_view.height();
     cube->setExtents(x_pos, y_pos, w, h);
-    cube->animate(x_pos, level * cube->height(), 2s);
+    cube->animate(x_pos, level * cube->height(), 1s);
     m_animator.addAnimation(cube);
     setNumber(std::get<3>(*ptr));
 }
@@ -45,7 +46,8 @@ void Game::add(GameObserver::CubeInfo ptr) {
 Game::Game(GameObserver& obs)  :
     m_obs(obs),
     m_animator(*this),
-    m_canvas(std::make_unique<Gempyre::CanvasElement>(*m_ui, "canvas")){
+    m_canvas(std::make_unique<Gempyre::CanvasElement>(*m_ui, "canvas")) {
+    Gempyre::setDebug(Gempyre::DebugLevel::Info);
     Element(*m_ui, "restart").subscribe("click", [this](auto) {
          Element(*m_ui, "game_over_win").setAttribute("style", "visibility:hidden");
          m_gameOver = false;
@@ -100,11 +102,15 @@ void Game::draw()  {
     m_canvas->draw(fc);
 }
 
-void Game::animate(const GameObserver::CubePtr& cube, int stripe, int level) {
+void Game::animate(const CubePtr& cube, int stripe, int level) {
     const auto ypos = m_view.cubeHeight() * level;
     const auto x = m_view.stripePos(stripe);
     cube->animate(x, ypos,  SlideSpeed);
     m_animator.addAnimation(cube);
+}
+
+void Game::setPostAnimation(const std::function<void ()>& finished) {
+    m_animator.setPostAnimation(finished);
 }
 
 void Game::run() {

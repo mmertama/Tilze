@@ -6,6 +6,20 @@
 
 Tilze::Tilze(Game& game) :
     m_game(game) {
+    m_game.setPostAnimation([this]() {
+        GempyreUtils::log(GempyreUtils::LogLevel::Info, "PAA", m_actions.size());
+        const auto sz = m_actions.size(); //only actions that are there now
+        for(auto i = 0U; i < sz; i++) {
+           auto action = m_actions.front();
+           m_actions.pop_front();
+            GempyreUtils::log(GempyreUtils::LogLevel::Info, "PAB", m_actions.size());
+           action();
+           GempyreUtils::log(GempyreUtils::LogLevel::Info, "PAC", m_actions.size());
+       }
+       if(m_squeeze && m_actions.empty())
+           squeeze();
+       GempyreUtils::log(GempyreUtils::LogLevel::Info, "PAZ", m_actions.size());
+    });
 }
 
 void Tilze::setHistory(int stripe, int value) {
@@ -28,14 +42,12 @@ Tilze::CubePos Tilze::select(int stripe, int value) {
 }
 
 Tilze::CubePos Tilze::addCube(int number, int stripe) {
-    //std::cerr << "addCube" << m_onRedraw << std::endl;
     const auto ani = m_cubes.add(number, stripe);
     if(ani) {
-        m_active = true;
         auto ptr = std::get<CubePtr>(*ani);
         const auto s = std::get<1>(*ani);
         const auto l = std::get<2>(*ani);
-        std::get<0>(*ani)->setPostAnimation([this, ptr, s, l]() {
+        m_actions.push_back([this, s, l, ptr]() {
             merge(ptr, s, l);
         });
     }
@@ -43,39 +55,72 @@ Tilze::CubePos Tilze::addCube(int number, int stripe) {
 }
 
 void Tilze::merge(const CubePtr& cube, int stripe, int level) {
-    if(!cube->isAlive())
-        return;
-    //std::cerr << "merge" << m_onRedraw << std::endl;
-    const auto sisters = m_cubes.takeSisters(*cube, stripe, level);
-    if(sisters.size() > 0) {
-        const auto value = cube->value();
-        m_points += value;
-        m_game.setPoints(m_points);
-        cube->setValue(value + value);
+    if(m_squeeze) {
 
-        for(const auto& sister : sisters) {
-            sister->setPostAnimation([cube, stripe, level, this]() {
-                merge(cube, stripe, level);
-            });
-            m_game.animate(sister, stripe, level);
-        }
+        squeeze();
+        m_actions.push_back([cube, stripe, level, this]() {
+            merge(cube, stripe, level);
+        });
         return;
     }
-    const auto merged = !sisters.empty();
-    squeeze();
+    if(cube->isAlive()) {
+        const auto sisters = m_cubes.takeSisters(*cube, stripe, level);
+        if(sisters.size() > 0) {
+            const auto value = cube->value();
+            m_points += value;
+            m_game.setPoints(m_points);
+            cube->setValue(value + value);
+
+            for(const auto& sister : sisters) {
+                /*
+                sister->setPostAnimation([cube, this]() {
+                    --m_actives;
+                    if(m_actives == 0)
+                        squeeze();
+                   // merge(cube, stripe, level);
+                });*/
+
+                m_squeeze = true;
+                m_actions.push_back([cube, stripe, level, this]() {
+                    merge(cube, stripe, level);
+                });
+                m_game.animate(sister, stripe, level);
+            }
+            //return true;
+        }
+    }
+
+    if(m_actions.empty() && !m_squeeze) {
+        squeeze(); //finish with squeze;
+    }
+
+
+  //  if(!sisters.empty()) {
+  //      m_squeeze = true;
+  //      m_actions.push_back([](){});
+  //   }
+
+   /* const auto merged = !sisters.empty();
+    if(merged) {
+        m_actions.push_back([this]() {
+            squeeze();
+        });
+    }
+    */
+ /*   squeeze();
     m_game.requestDraw();
     if(!merged && m_history) {
         m_game.after(200ms, [this]() {
             select(std::get<0>(*m_history), std::get<0>(*m_history));
         });
     }
-    if(!m_active && m_cubes.full()) {
+    if(canAdd() && m_cubes.full()) {
         m_game.setGameOver(m_points);
-    }
+    }*/
 }
 
 void Tilze::squeeze() {
-    assert(m_active);
+    m_squeeze = false;
     GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeeze");
     for(auto it = begin(); it != end(); ++it)  {
         const auto level = this->level(it);
@@ -87,29 +132,31 @@ void Tilze::squeeze() {
         }
         if(next_level < level) {
             const auto moved = m_cubes.move(stripe, level, stripe, next_level); //after  this c is null
+            /*++m_actives;
             moved->setPostAnimation([moved, stripe, next_level, this]() {
+                --m_actives;
+                merge(moved, stripe, next_level);
+            });*/
+            m_actions.push_back([this, moved, stripe, next_level]() {
                 merge(moved, stripe, next_level);
             });
             m_game.animate(moved, stripe, next_level);
         }
     }
-    GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed");
+
+    if(m_actions.size() == 3) {
+        GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed -  here", m_actions.size());
+    }
+
+    GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed", m_actions.size());
+
+    if(canAdd() && m_cubes.full()) {
+        m_game.setGameOver(m_points);
+    }
+    //return m_actives > 0;
 }
 
 bool Tilze::canAdd() const {
-    return !m_active;
+    return !m_squeeze && m_actions.empty();
 }
-
-/*
-int Tilze::level(const Cube& cube) const {
-    const auto begin = pos(cube.stripe(), 0);
-    const auto end = begin + RowCount;
-     for(auto it = begin; it != end; ++it)
-        if(&cube == m_cubes[it].get())
-            return it - begin;
-    assert(false);
-    return -1;
-    }
-    */
-
 

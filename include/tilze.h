@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <functional>
+#include <deque>
 #include "table.h"
 
 class Cube;
@@ -32,10 +33,12 @@ public:
     void squeeze();
 private:
     Game& m_game;
-    std::optional<int> m_selected_stripe = std::nullopt;
+    std::optional<int> m_selected_stripe{std::nullopt};
     CubeTable m_cubes;
-    int m_current_number = 2;
+    int m_current_number{2};
     std::optional<std::tuple<int, int>> m_history;
-    int m_points = 0;
-    bool m_active = false;
+    int m_points{0};
+    std::deque<std::function<void ()>> m_actions;
+    bool m_squeeze{false};
 };
+

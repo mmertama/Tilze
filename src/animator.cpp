@@ -1,6 +1,8 @@
 #include "animator.h"
 #include <cassert>
 
+#include "gempyre_utils.h"
+
 /*
 int Tilze::time(int from, int to) const {
     return SlideSpeed * std::abs(from - to) / m_height;
@@ -36,6 +38,8 @@ void Animated::setExtents(int x, int y, int w, int h) {
 
 void Animated::animate(int ex, int ey, const std::chrono::milliseconds& speed) {
 
+    m_state |= Animation;
+
     m_end_x = ex;
     m_end_y = ey;
 
@@ -63,10 +67,15 @@ void Animated::setPostAnimation(const std::function<void ()> &finished) {
 }
 
 void Animated::finish() {
-    assert(mFinished);
-    auto f = mFinished;
-    mFinished = nullptr;
-    f();
+    if(m_state & Animation) {
+        m_state &= ~Animation;
+        if(mFinished)
+            mFinished();
+    }
+}
+
+void Animator::setPostAnimation(const std::function<void ()> &finished) {
+    mFinished = finished;
 }
 
 void Animator::addAnimation(const value_type& ani) {
@@ -89,10 +98,18 @@ void Animator::addAnimation(const value_type& ani) {
                             m_animates.end());
             }
 
+
+            if(isActive() && m_animates.empty()) {
+                GempyreUtils::log(GempyreUtils::LogLevel::Info, "END-A");
+                if(mFinished)
+                    mFinished();
+                GempyreUtils::log(GempyreUtils::LogLevel::Info, "END-B", m_animates.size());
+            }
+            //we dont know about mFinished side effects
             if(isActive() && m_animates.empty()) {
                 m_env.stopPeriodic(m_timerId);
                 m_timerId = 0;
-                }
+            }
 
             m_env.draw();
         });

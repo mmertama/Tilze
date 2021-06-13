@@ -30,6 +30,9 @@ add_executable(${PROJECT_NAME}
     include/autoplay.h
     src/autoplay.cpp
     src/view.cpp
+    include/gameobserver.h
+    include/tilzeobserver.h
+    src/tilzeobserver.cpp
     )
 
 add_compile_definitions(StripeCount=5)

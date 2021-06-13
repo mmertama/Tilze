@@ -7,33 +7,27 @@
 #include "animator.h"
 
 class Cube;
+class GameObserver;
 
 namespace Gempyre {
     class FrameComposer;
 }
 
-class GameObserver {
-public:
+class Game : public GameEnv {
     using CubePtr = std::shared_ptr<Cube>;
     using CubeInfo = std::optional<std::tuple<CubePtr, int, int, int>>;
-    virtual void draw(Gempyre::FrameComposer& fc) = 0;
-    virtual void resize(const View& view) = 0;
-    virtual CubeInfo select(int stripe) = 0;
-    virtual void reset() = 0;
-};
-
-class Game : public GameEnv {
 public:
     Game(GameObserver& obs);
     ~Game();
-    void animate(const GameObserver::CubePtr&, int, int);
+    void animate(const CubePtr&, int, int);
     void setPoints(int points);
     void setGameOver(int points);
     void setNumber(int number);
     void run();
     void draw() override;
     void requestDraw();
-    void add(GameObserver::CubeInfo ptr);
+    void add(CubeInfo ptr);
+    void setPostAnimation(const std::function<void ()>& finished);
 private:
     void resize();
 private:

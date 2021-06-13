@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <gempyre_utils.h>
 #include <chrono>
+#include <gameobserver.h>
 
 
 using namespace std::chrono_literals;
@@ -35,8 +36,8 @@ void AutoPlay::play(const std::string& name) {
 
     m_it = m_playVec.begin();
 
-    m_timer = m_env.startPeriodic(100ms, [this]() {
-        GempyreUtils::log(GempyreUtils::LogLevel::Info, "set", std::distance(m_it, m_playVec.end()));
+    m_timer = m_env.startPeriodic(500ms, [this]() {
+        //GempyreUtils::log(GempyreUtils::LogLevel::Info, "set", std::distance(m_it, m_playVec.end()));
             if(m_it == m_playVec.end()) {
                 m_env.stopPeriodic(m_timer);
                 m_timer = 0;
@@ -54,6 +55,10 @@ void AutoPlay::play(const std::string& name) {
                                              std::get<2>(*c),
                                              std::get<0>(*c)->value()}});
             ++m_it;
+            const auto dd = std::distance(m_playVec.begin(), m_it);
+            GempyreUtils::log(GempyreUtils::LogLevel::Info, "autoplay", dd);
+            if(dd == 6)
+                GempyreUtils::log(GempyreUtils::LogLevel::Info, "oops", dd);
             });
 }
 
