@@ -15,18 +15,18 @@ namespace Gempyre {
 
 class Game : public GameEnv {
     using CubePtr = std::shared_ptr<Cube>;
-    using CubeInfo = std::optional<std::tuple<CubePtr, int, int, int>>;
 public:
+    enum class Animation {Move, Fade};
     Game(GameObserver& obs);
     ~Game();
-    void animate(const CubePtr&, int, int);
+    void animate(const CubePtr& cube, Animation anim_type);
     void setPoints(int points);
     void setGameOver(int points);
     void setNumber(int number);
     void run();
     void draw() override;
     void requestDraw();
-    void add(CubeInfo ptr);
+    void add(const CubePtr& ptr, int next_value);
     void setPostAnimation(const std::function<void ()>& finished);
 private:
     void resize();

@@ -15,15 +15,16 @@ namespace Gempyre {
 }
 
 class Animated {
-    enum {None, Animation = 0x1};
+    enum {None, MoveAnimation = 0x1, FadeAnimation = 0x2};
 public:
     virtual ~Animated() = default;
     void animate(int end_x, int end_y, const std::chrono::milliseconds& speed);
+    void animate(double opacity, const std::chrono::milliseconds& speed);
     void finish();
     void setPostAnimation(const std::function<void ()>& finished);
 
     bool isAnimated()  const {
-        return m_state & Animation;
+        return m_state != None;
     }
 
     bool inc();
@@ -34,6 +35,7 @@ public:
     int y() const {return static_cast<int>(m_y);}
     int width() const {return static_cast<int>(m_width);}
     int height() const {return static_cast<int>(m_height);}
+    double opacity() const {return m_opacity;}
 
     virtual void draw(Gempyre::FrameComposer& fc) const = 0;
 protected:
@@ -43,6 +45,9 @@ protected:
     double m_end_x, m_end_y;
     double m_dx{0}, m_dy{0};
     double m_width, m_height;
+    double m_opacity{1.};
+    double m_opacity_delta{0};
+    double m_opacity_end{1.};
 };
 
 class Animator {

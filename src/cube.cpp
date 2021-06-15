@@ -2,9 +2,12 @@
 #include "gempyre_graphics.h"
 #include "gempyre.h"
 
-static void roundRect(Gempyre::FrameComposer& fc, const Gempyre::Element::Rect& rect, const std::string& color, int radius) {
+static void roundRect(Gempyre::FrameComposer& fc,
+                      const Gempyre::Element::Rect& rect,
+                      const Gempyre::Color::type& color,
+                      int radius) {
   fc.beginPath();
-  fc.fillStyle(color);
+  fc.fillStyle(Gempyre::Color::rgba(color));
   fc.moveTo(rect.x + radius, rect.y);
   fc.lineTo(rect.x + rect.width - radius, rect.y);
   fc.quadraticCurveTo(rect.x + rect.width, rect.y, rect.x + rect.width, rect.y + radius);
@@ -19,7 +22,8 @@ static void roundRect(Gempyre::FrameComposer& fc, const Gempyre::Element::Rect& 
 }
 
 void Cube::draw(Gempyre::FrameComposer& fc) const {
-    roundRect(fc, {x(), y(), width(), height()}, "cyan", 5);
+    auto color = Gempyre::Color::rgba(0x0, 0xFF, 0xFF, static_cast<Gempyre::Color::type>(255. *  opacity()));
+    roundRect(fc, {x(), y(), width(), height()}, color, 5);
     fc.fillStyle("black");
     fc.font("bold 24px arial");
     fc.textBaseline("middle");

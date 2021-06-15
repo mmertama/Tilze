@@ -42,16 +42,18 @@ void TilzeObserver::resize(const View& view)  {
     }
 }
 
-GameObserver::CubeInfo TilzeObserver::select(int stripe) {
+std::optional<std::tuple<int, int>> TilzeObserver::position(const CubePtr& ptr) const {
+    return m_tilze->position(ptr);
+}
+
+std::optional<std::tuple<GameObserver::CubePtr, int>>TilzeObserver::select(int stripe) {
     auto ptr = m_tilze->select(stripe, m_nextValue);
     if(ptr)
     {
         m_play->add(stripe, m_nextValue);
-        const auto r_value = std::make_optional<GameObserver::CubeInfo::value_type> ({
-                                                                                         std::get<0>(*ptr),
-                                                                                         std::get<1>(*ptr),
-                                                                                         std::get<2>(*ptr),
-                                                                                         m_nextValue});
+        const std::tuple<GameObserver::CubePtr, int> r_value {
+            *ptr, m_nextValue
+        };
         m_nextValue = get2Pow(6);
         return r_value;
     }

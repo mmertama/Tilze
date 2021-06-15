@@ -18,8 +18,9 @@ public:
     TilzeObserver& operator=(AutoPlay& play);
     void draw(Gempyre::FrameComposer& fc) override;
     void resize(const View& view) override;
-    GameObserver::CubeInfo select(int stripe) override;
+    std::optional<std::tuple<CubePtr, int>> select(int stripe) override;
     void reset() override;
+    std::optional<std::tuple<int, int>> position(const CubePtr& ptr) const override;
 private:
     Tilze* m_tilze = nullptr;
     AutoPlay* m_play = nullptr;

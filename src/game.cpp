@@ -11,6 +11,7 @@
 
 using namespace Gempyre;
 constexpr auto SlideSpeed = TimerPeriod * 40;
+constexpr auto FadeSpeed = TimerPeriod * 10;
 
 void Game::setPoints(int points) {
     Element(*m_ui, "points").setHTML(std::to_string(points));
@@ -28,11 +29,11 @@ void Game::setNumber(int value) {
 
 Game::~Game() {}
 
-void Game::add(CubeInfo ptr) {
-    auto cube = std::get<GameObserver::CubePtr>(*ptr);
-    const auto stripe = std::get<1>(*ptr);
-     *m_selected = stripe; //autoplay can make them diffrent
-    const auto level = std::get<2>(*ptr);
+void Game::add(const CubePtr& cube, int next) {
+    const auto p =  m_obs.position(cube);
+    assert(p);
+    const auto& [stripe, level] = *p;
+    *m_selected = stripe; //autoplay can make them diffrent
     const auto h = m_view.height() / RowCount;
     const auto w = m_view.stripeInWidth();
     const auto x_pos = m_view.stripePos(stripe);
@@ -40,7 +41,7 @@ void Game::add(CubeInfo ptr) {
     cube->setExtents(x_pos, y_pos, w, h);
     cube->animate(x_pos, level * cube->height(), 1s);
     m_animator.addAnimation(cube);
-    setNumber(std::get<3>(*ptr));
+    setNumber(next);
 }
 
 Game::Game(GameObserver& obs)  :
@@ -55,13 +56,13 @@ Game::Game(GameObserver& obs)  :
     });
 
     m_canvas->subscribe("click", [this](const auto& ev) {
-        if(m_gameOver)
+        if(m_gameOver || m_animator.isActive())
             return;
         const auto x = GempyreUtils::to<int>(ev.properties.at("clientX"));
         m_selected = m_view.stripeAt(x);
         const auto ptr = m_obs.select(*m_selected);
         if(ptr) {
-           add(ptr);
+           add(std::get<CubePtr>(*ptr), std::get<int>(*ptr));
         }
     }, {"clientX", "clientY"}, 200ms);
 
@@ -102,10 +103,22 @@ void Game::draw()  {
     m_canvas->draw(fc);
 }
 
-void Game::animate(const CubePtr& cube, int stripe, int level) {
-    const auto ypos = m_view.cubeHeight() * level;
-    const auto x = m_view.stripePos(stripe);
-    cube->animate(x, ypos,  SlideSpeed);
+void Game::animate(const CubePtr& cube, Animation animation_type) {
+    switch (animation_type) {
+        case Animation::Move: {
+            const auto p =  m_obs.position(cube);
+            assert(p);
+            const auto& [stripe, level] = *p;
+            const auto ypos = m_view.cubeHeight() * level;
+            const auto x = m_view.stripePos(stripe);
+            cube->animate(x, ypos,  SlideSpeed);
+            }
+            break;
+        case Animation::Fade: {
+            cube->animate(0.,  FadeSpeed);
+            }
+            break;
+    }
     m_animator.addAnimation(cube);
 }
 

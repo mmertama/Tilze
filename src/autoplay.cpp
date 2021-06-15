@@ -49,11 +49,7 @@ void AutoPlay::play(const std::string& name) {
             }
 
             const auto c = m_tilze.select(m_it->second, m_it->first);
-            m_env.add(GameObserver::CubeInfo{{
-                                             std::get<0>(*c),
-                                             std::get<1>(*c),
-                                             std::get<2>(*c),
-                                             std::get<0>(*c)->value()}});
+            m_env.add(*c, (*c)->value());
             ++m_it;
             const auto dd = std::distance(m_playVec.begin(), m_it);
             GempyreUtils::log(GempyreUtils::LogLevel::Info, "autoplay", dd);

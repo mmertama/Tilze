@@ -14,17 +14,28 @@ int Tilze::yPos(int level) const {
 */
 
 bool Animated::inc() {
-    m_x += m_dx;
-    m_y += m_dy;
-    if(
-        (m_dx > 0 && m_x >= m_end_x) ||
-        (m_dx < 0 && m_x <= m_end_x) ||
-        (m_dy > 0 && m_y >= m_end_y) ||
-        (m_dy < 0 && m_y <= m_end_y) ||
-        (m_dx == 0 && m_dy == 0)) {
-        m_x = m_end_x;
-        m_y = m_end_y;
-        return false;
+    if(m_state & MoveAnimation)  {
+        m_x += m_dx;
+        m_y += m_dy;
+        if(
+            (m_dx > 0 && m_x >= m_end_x) ||
+            (m_dx < 0 && m_x <= m_end_x) ||
+            (m_dy > 0 && m_y >= m_end_y) ||
+            (m_dy < 0 && m_y <= m_end_y) ||
+            (m_dx == 0 && m_dy == 0)) {
+            m_x = m_end_x;
+            m_y = m_end_y;
+            return false;
+        }
+    }
+
+    if(m_state & FadeAnimation) {
+        m_opacity -= m_opacity_delta;
+        if(m_opacity_delta > 0 && m_opacity < m_opacity_end ||
+           m_opacity_delta < 0 && m_opacity > m_opacity_end) {
+            m_opacity = m_opacity_end;
+            return false;
+        }
     }
     return true;
 }
@@ -36,9 +47,22 @@ void Animated::setExtents(int x, int y, int w, int h) {
     m_height = h;
 }
 
+void Animated::animate(double opacity, const std::chrono::milliseconds& speed) {
+     m_state |= FadeAnimation;
+     const auto period  = speed * (1. - opacity);
+     const auto dur = period / TimerPeriod.count();
+     const auto tics = std::chrono::duration<double, std::milli>(dur).count();
+     m_opacity_end = opacity;
+     if(tics > 0) {
+           m_opacity_delta = (1. - opacity) / tics;
+     } else {
+         m_opacity = opacity;
+     }
+}
+
 void Animated::animate(int ex, int ey, const std::chrono::milliseconds& speed) {
 
-    m_state |= Animation;
+    m_state |= MoveAnimation;
 
     m_end_x = ex;
     m_end_y = ey;
@@ -67,8 +91,8 @@ void Animated::setPostAnimation(const std::function<void ()> &finished) {
 }
 
 void Animated::finish() {
-    if(m_state & Animation) {
-        m_state &= ~Animation;
+    if(m_state != None) {
+        m_state = None;
         if(mFinished)
             mFinished();
     }

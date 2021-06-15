@@ -4,6 +4,7 @@
 #include <memory>
 #include <array>
 #include <cassert>
+#include <optional>
 
 template <class T, int ROWS, int STRIPES>
 class Table {
@@ -44,14 +45,23 @@ public:
     Table() = default;
     Table(const Table&) = delete;
     Table& operator=(const Table&) = delete;
-    std::optional<std::tuple<value_type, int, int>> add(int value, int stripe) {
+
+    std::optional<value_type> add(int value, int stripe) {
         const auto sz = size(stripe);
         if(sz >= ROWS)
             return std::nullopt;
         const auto p = pos(stripe, sz);
         assert(!m_cubes[p]);
         m_cubes[p] = std::make_shared<T>(value);
-        return std::make_tuple(m_cubes[p], stripe, sz);
+        return std::make_optional(m_cubes[p]);
+    }
+
+    const_iterator find(const value_type& v) const {
+        for(auto it = begin(); it != end(); ++it) {
+            if(*it ==  v)
+                return it;
+        }
+        return end();
     }
 
     value_type move(int stripe_from, int row_from, int stripe_to, int row_to) {
@@ -99,12 +109,17 @@ public:
         return at(col, row).operator bool();
     }
 
-    auto takeSisters(const T& cube, int stripe, int level) {
+    auto takeSisters(const value_type& cube) {
+        const auto p = find(cube);
+
+        const auto stripe = column(p);
+        const auto level = row(p);
+
         std::vector<value_type> vec;
         vec.reserve(4);
         const auto check = [&vec, &cube, this](int s, int l) {
             auto c = at(s, l);
-            if(!c || !c->isAlive() || c->value() != cube.value())
+            if(!c || !c->isAlive() || c->value() != cube->value())
                 return;
             auto taken = take(s, l);
             taken->kill();
@@ -134,10 +149,16 @@ public:
     }
 
 private:
-     template<class IT>
+    template<class IT>
     int distance(const IT& it) const {
         return &(*it) - &(*m_cubes.begin());
     }
+
+    template<class IT>
+    IT distance(int pos) const {
+        return &(*m_cubes.begin()) + pos;
+    }
+
 private:
     ArrayType m_cubes;
 };

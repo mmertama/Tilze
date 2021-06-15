@@ -33,7 +33,7 @@ void Tilze::clear() {
     m_game.draw();
 }
 
-Tilze::CubePos Tilze::select(int stripe, int value) {
+std::optional<Tilze::CubePtr> Tilze::select(int stripe, int value) {
     m_history = std::nullopt;
     m_selected_stripe = std::make_optional(stripe);
     const auto r = addCube(m_current_number, stripe);
@@ -41,37 +41,35 @@ Tilze::CubePos Tilze::select(int stripe, int value) {
     return r;
 }
 
-Tilze::CubePos Tilze::addCube(int number, int stripe) {
+std::optional<Tilze::CubePtr> Tilze::addCube(int number, int stripe) {
     const auto ani = m_cubes.add(number, stripe);
     if(ani) {
-        auto ptr = std::get<CubePtr>(*ani);
-        const auto s = std::get<1>(*ani);
-        const auto l = std::get<2>(*ani);
-        m_actions.push_back([this, s, l, ptr]() {
-            merge(ptr, s, l);
+        m_actions.push_back([this, ani]() {
+            merge(*ani);
         });
     }
-    return ani;
+    return *ani;
 }
 
-void Tilze::merge(const CubePtr& cube, int stripe, int level) {
-    if(m_squeeze) {
+std::optional<std::tuple<int, int>> Tilze::position(const CubePtr& ptr) {
+    const auto p = m_cubes.find(ptr);
+    return p != end()
+            ? std::make_optional(std::make_tuple(m_cubes.column(p), m_cubes.row(p))) : std::nullopt;
+}
 
-        squeeze();
-        m_actions.push_back([cube, stripe, level, this]() {
-            merge(cube, stripe, level);
-        });
-        return;
-    }
+void Tilze::merge(const CubePtr& cube) {
+    squeeze();
     if(cube->isAlive()) {
-        const auto sisters = m_cubes.takeSisters(*cube, stripe, level);
+        const auto sisters = m_cubes.takeSisters(cube);
         if(sisters.size() > 0) {
             const auto value = cube->value();
             m_points += value;
             m_game.setPoints(m_points);
             cube->setValue(value + value);
-
             for(const auto& sister : sisters) {
+                m_game.animate(sister, Game::Animation::Fade);
+            }
+            //for(const auto& sister : sisters) {
                 /*
                 sister->setPostAnimation([cube, this]() {
                     --m_actives;
@@ -81,18 +79,20 @@ void Tilze::merge(const CubePtr& cube, int stripe, int level) {
                 });*/
 
                 m_squeeze = true;
-                m_actions.push_back([cube, stripe, level, this]() {
-                    merge(cube, stripe, level);
-                });
-                m_game.animate(sister, stripe, level);
-            }
+                m_actions.push_back([cube, this]() {
+                    merge(cube);
+               });
+                m_game.animate(cube, Game::Animation::Move);
+              //  m_game.animate(sister);
+          //  }
             //return true;
         }
     }
 
-    if(m_actions.empty() && !m_squeeze) {
-        squeeze(); //finish with squeze;
-    }
+
+   // if(m_actions.empty() && !m_squeeze) {
+   //     squeeze(); //finish with squeze;
+   // }
 
 
   //  if(!sisters.empty()) {
@@ -118,6 +118,12 @@ void Tilze::merge(const CubePtr& cube, int stripe, int level) {
         m_game.setGameOver(m_points);
     }*/
 }
+/*
+bool Tilze::needsSqueeze(const CubePtr& cube) const {
+    return cubee->level() > 0 && !m_cubes.has(stripe, level - 1))
+}*/
+
+
 
 void Tilze::squeeze() {
     m_squeeze = false;
@@ -137,10 +143,10 @@ void Tilze::squeeze() {
                 --m_actives;
                 merge(moved, stripe, next_level);
             });*/
-            m_actions.push_back([this, moved, stripe, next_level]() {
-                merge(moved, stripe, next_level);
+            m_actions.push_back([this, moved]() {
+                merge(moved);
             });
-            m_game.animate(moved, stripe, next_level);
+            m_game.animate(moved, Game::Animation::Move);
         }
     }
 
