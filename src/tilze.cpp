@@ -7,18 +7,14 @@
 Tilze::Tilze(Game& game) :
     m_game(game) {
     m_game.setPostAnimation([this]() {
-        GempyreUtils::log(GempyreUtils::LogLevel::Info, "PAA", m_actions.size());
         const auto sz = m_actions.size(); //only actions that are there now
         for(auto i = 0U; i < sz; i++) {
            auto action = m_actions.front();
            m_actions.pop_front();
-            GempyreUtils::log(GempyreUtils::LogLevel::Info, "PAB", m_actions.size());
            action();
-           GempyreUtils::log(GempyreUtils::LogLevel::Info, "PAC", m_actions.size());
        }
        if(m_squeeze && m_actions.empty())
            squeeze();
-       GempyreUtils::log(GempyreUtils::LogLevel::Info, "PAZ", m_actions.size());
     });
 }
 
@@ -48,7 +44,7 @@ std::optional<Tilze::CubePtr> Tilze::addCube(int number, int stripe) {
             merge(*ani);
         });
     }
-    return *ani;
+    return ani;
 }
 
 std::optional<std::tuple<int, int>> Tilze::position(const CubePtr& ptr) {
@@ -127,7 +123,6 @@ bool Tilze::needsSqueeze(const CubePtr& cube) const {
 
 void Tilze::squeeze() {
     m_squeeze = false;
-    GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeeze");
     for(auto it = begin(); it != end(); ++it)  {
         const auto level = this->level(it);
         auto next_level = level;
@@ -149,12 +144,6 @@ void Tilze::squeeze() {
             m_game.animate(moved, Game::Animation::Move);
         }
     }
-
-    if(m_actions.size() == 3) {
-        GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed -  here", m_actions.size());
-    }
-
-    GempyreUtils::log(GempyreUtils::LogLevel::Info, "squeezed", m_actions.size());
 
     if(canAdd() && m_cubes.full()) {
         m_game.setGameOver(m_points);

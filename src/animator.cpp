@@ -1,7 +1,6 @@
 #include "animator.h"
 #include <cassert>
 
-#include "gempyre_utils.h"
 
 /*
 int Tilze::time(int from, int to) const {
@@ -31,8 +30,8 @@ bool Animated::inc() {
 
     if(m_state & FadeAnimation) {
         m_opacity -= m_opacity_delta;
-        if(m_opacity_delta > 0 && m_opacity < m_opacity_end ||
-           m_opacity_delta < 0 && m_opacity > m_opacity_end) {
+        if((m_opacity_delta > 0 && m_opacity < m_opacity_end) ||
+           (m_opacity_delta < 0 && m_opacity > m_opacity_end)) {
             m_opacity = m_opacity_end;
             return false;
         }
@@ -124,10 +123,8 @@ void Animator::addAnimation(const value_type& ani) {
 
 
             if(isActive() && m_animates.empty()) {
-                GempyreUtils::log(GempyreUtils::LogLevel::Info, "END-A");
                 if(mFinished)
                     mFinished();
-                GempyreUtils::log(GempyreUtils::LogLevel::Info, "END-B", m_animates.size());
             }
             //we dont know about mFinished side effects
             if(isActive() && m_animates.empty()) {

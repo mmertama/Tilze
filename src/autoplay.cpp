@@ -53,8 +53,6 @@ void AutoPlay::play(const std::string& name) {
             ++m_it;
             const auto dd = std::distance(m_playVec.begin(), m_it);
             GempyreUtils::log(GempyreUtils::LogLevel::Info, "autoplay", dd);
-            if(dd == 6)
-                GempyreUtils::log(GempyreUtils::LogLevel::Info, "oops", dd);
             });
 }
 

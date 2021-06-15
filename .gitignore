@@ -4,3 +4,4 @@ CMakeLists.txt.user
 builds
 .idea
 cmake-build-debug
+.DS_Store
