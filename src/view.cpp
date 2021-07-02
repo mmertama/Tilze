@@ -4,8 +4,8 @@
 void View::draw(Gempyre::FrameComposer& fc, std::optional<int> selected) const  {
      fc.fillRect({0, 0, width(), height()});
     auto p = left();
-    const std::string red{"magenta"};
-    const std::string blue{"blue"};
+    const std::string red{"darkgreen"};
+    const std::string blue{"darkred"};
     for(auto i = 0; i < StripeCount; i++) {
         const std::string color = selected && selected.value() == i ? red : blue;
         fc.fillStyle(color);

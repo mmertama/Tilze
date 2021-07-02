@@ -12,6 +12,7 @@
 using namespace Gempyre;
 constexpr auto SlideSpeed = TimerPeriod * 40;
 constexpr auto FadeSpeed = TimerPeriod * 10;
+constexpr auto AddSpeed = 1s;
 
 void Game::setPoints(int points) {
     Element(*m_ui, "points").setHTML(std::to_string(points));
@@ -39,7 +40,7 @@ void Game::add(const CubePtr& cube, int next) {
     const auto x_pos = m_view.stripePos(stripe);
     const auto y_pos = m_view.height();
     cube->setExtents(x_pos, y_pos, w, h);
-    cube->animate(x_pos, level * cube->height(), 1s);
+    cube->animate(x_pos, level * cube->height(), AddSpeed);
     m_animator.addAnimation(cube);
     setNumber(next);
 }
