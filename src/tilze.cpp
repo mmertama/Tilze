@@ -61,7 +61,7 @@ void Tilze::merge(const CubePtr& cube) {
             const auto value = cube->value();
             m_points += value;
             m_game.setPoints(m_points);
-            cube->setValue(value + value);
+            //cube->setValue(value + value);
             for(const auto& sister : sisters) {
                 m_game.animate(sister, Game::Animation::Fade);
             }
@@ -76,6 +76,7 @@ void Tilze::merge(const CubePtr& cube) {
 
                 m_squeeze = true;
                 m_actions.push_back([cube, this]() {
+                    cube->setValue(cube->value() * 2);
                     merge(cube);
                });
                 m_game.animate(cube, Game::Animation::Move);
