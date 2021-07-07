@@ -24,12 +24,14 @@ public:
     void setGameOver(int points);
     void setNumber(int number);
     void run();
-    void draw() override;
-    void requestDraw();
+    void drawOnce() override;
+    void drawStart() override;
+    void drawEnd() override;
     void add(const CubePtr& ptr, int next_value);
     void setPostAnimation(const std::function<void ()>& finished);
 private:
     void resize();
+    void drawFrame();
 private:
     GameObserver& m_obs;
     View m_view;

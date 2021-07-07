@@ -104,6 +104,7 @@ void Animator::setPostAnimation(const std::function<void ()> &finished) {
 void Animator::addAnimation(const value_type& ani) {
     m_animates.emplace_back(ani);
     if(!isActive()) {
+        m_env.drawStart();
         m_timerId = m_env.startPeriodic(TimerPeriod, [this]() {
             bool isRemoved = false;
             for(auto& ani : m_animates) {
@@ -115,9 +116,9 @@ void Animator::addAnimation(const value_type& ani) {
 
             if(isRemoved) {
                 m_animates.erase(
-                            std::remove_if(m_animates.begin(), m_animates.end(), [](const auto& c) {
-                    return !c->isAnimated();
-                }),
+                            std::remove_if(m_animates.begin(),
+                                           m_animates.end(),
+                                           [](const auto& c) {return !c->isAnimated();}),
                             m_animates.end());
             }
 
@@ -126,13 +127,13 @@ void Animator::addAnimation(const value_type& ani) {
                 if(mFinished)
                     mFinished();
             }
+
             //we dont know about mFinished side effects
             if(isActive() && m_animates.empty()) {
                 m_env.stopPeriodic(m_timerId);
                 m_timerId = 0;
+                m_env.drawEnd();
             }
-
-            m_env.draw();
         });
     }
 }

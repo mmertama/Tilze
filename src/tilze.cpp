@@ -26,7 +26,7 @@ void Tilze::clear() {
     m_cubes.clear();
     m_current_number = 2;
     m_points = 0;
-    m_game.draw();
+    m_game.drawOnce();
 }
 
 std::optional<Tilze::CubePtr> Tilze::select(int stripe, int value) {

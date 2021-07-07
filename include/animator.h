@@ -8,7 +8,7 @@
 
 using namespace std::chrono_literals;
 
-constexpr auto TimerPeriod{60ms};
+constexpr auto TimerPeriod{40ms};
 
 namespace Gempyre {
     class FrameComposer;

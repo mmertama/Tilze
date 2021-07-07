@@ -90,10 +90,30 @@ void Game::resize() {
     m_view.set(width, height);
     m_obs.resize(m_view);
 
-    draw();
-};
+    drawOnce();
+}
 
-void Game::draw()  {
+void Game::drawStart() {
+    if(m_onRedraw)
+        return;
+    m_onRedraw = true;
+    m_canvas->drawCompleted([this](){drawFrame();});
+    drawFrame();
+}
+
+void Game::drawEnd() {
+    m_canvas->drawCompleted(nullptr);
+    m_onRedraw = false;
+    drawFrame();
+}
+
+void Game::drawOnce() {
+    if(m_onRedraw)
+        return;
+    drawFrame();
+}
+
+void Game::drawFrame()  {
     FrameComposer fc;
     fc.fillStyle("black");
     m_view.draw(fc, m_selected);
@@ -131,6 +151,7 @@ void Game::run() {
     m_ui->run();
 }
 
+/*
 void Game::requestDraw() {
     GempyreUtils::log(GempyreUtils::LogLevel::Info, "requestDraw", m_onRedraw);
     if(!m_onRedraw) {
@@ -144,4 +165,5 @@ void Game::requestDraw() {
         });
     }
 }
+*/
 
