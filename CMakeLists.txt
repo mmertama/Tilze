@@ -3,7 +3,8 @@ cmake_minimum_required (VERSION 3.17)
 project (Tilze LANGUAGES CXX)
 
 find_package (gempyre REQUIRED)
-include(addResource)
+include(gempyre)
+include(hiillos)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -35,14 +36,15 @@ add_executable(${PROJECT_NAME}
     src/tilzeobserver.cpp
     )
 
+hiillos_make_application(${PROJECT_NAME})
+
 add_compile_definitions(StripeCount=5)
 add_compile_definitions(RowCount=5)
 
-addResource(PROJECT ${PROJECT_NAME} TARGET include/ui_resource.h SOURCES gui/ui.html gui/favicon.ico)
+gempyre_add_resources(PROJECT ${PROJECT_NAME} TARGET include/ui_resource.h SOURCES gui/ui.html gui/favicon.ico)
 	
 #target_link_libraries (${PROJECT_NAME}  gempyre::gempyre)
 target_link_libraries (${PROJECT_NAME}
         /usr/local/lib/gempyre/libgempyred.a
         /usr/local/lib/gempyre/uSockets.a
         -lpthread)
-

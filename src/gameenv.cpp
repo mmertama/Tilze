@@ -9,15 +9,15 @@ GameEnv::GameEnv() :
 }
 
 int GameEnv::startPeriodic(const std::chrono::milliseconds &period, const std::function<void ()>& f) {
-    return m_ui->startTimer(period, false, f);
+    return m_ui->startPeriodic(period, f);
 }
 
 void GameEnv::after(const std::chrono::milliseconds &period, const std::function<void ()>& f) {
-    m_ui->startTimer(period, true, f);
+    m_ui->after(period, f);
 }
 
 void GameEnv::stopPeriodic(int perdiodic) {
-    m_ui->stopTimer(perdiodic);
+    m_ui->cancel(perdiodic);
 }
 
 GameEnv::~GameEnv() {}
