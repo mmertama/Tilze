@@ -45,7 +45,8 @@ void Game::add(const CubePtr& cube, int next) {
     setNumber(next);
 }
 
-Game::Game(GameObserver& obs)  :
+Game::Game(GameObserver& obs, int argc, char** argv)  :
+    GameEnv(argc, argv),
     m_obs(obs),
     m_animator(*this),
     m_canvas(std::make_unique<Gempyre::CanvasElement>(*m_ui, "canvas")) {

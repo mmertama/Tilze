@@ -4,8 +4,8 @@
 #include <gempyre_graphics.h>
 #include <gempyre_utils.h>
 
-GameEnv::GameEnv() :
-    m_ui(std::make_unique<Gempyre::Ui>(Ui_resourceh, "/ui.html")) {
+GameEnv::GameEnv(int argc, char* argv[]) :
+    m_ui(std::make_unique<Gempyre::Ui>(Ui_resourceh, "/ui.html", argc, argv)) {
 }
 
 int GameEnv::startPeriodic(const std::chrono::milliseconds &period, const std::function<void ()>& f) {

@@ -42,9 +42,11 @@ add_compile_definitions(StripeCount=5)
 add_compile_definitions(RowCount=5)
 
 gempyre_add_resources(PROJECT ${PROJECT_NAME} TARGET include/ui_resource.h SOURCES gui/ui.html gui/favicon.ico)
-	
-#target_link_libraries (${PROJECT_NAME}  gempyre::gempyre)
-target_link_libraries (${PROJECT_NAME}
-        /usr/local/lib/gempyre/libgempyred.a
-        /usr/local/lib/gempyre/uSockets.a
-        -lpthread)
+
+target_link_libraries (${PROJECT_NAME}  gempyre::gempyre)
+
+
+#target_link_libraries (${PROJECT_NAME}
+#        /usr/local/lib/gempyre/libgempyred.a
+#        /usr/local/lib/gempyre/uSockets.a
+#        -lpthread)

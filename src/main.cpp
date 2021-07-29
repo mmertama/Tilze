@@ -1,17 +1,21 @@
-#include <tilzeobserver.h>
-#include <game.h>
-#include <tilze.h>
-#include <autoplay.h>
+#include "tilzeobserver.h"
+#include "game.h"
+#include "tilze.h"
+#include "autoplay.h"
+#include <gempyre_utils.h>
+#include <gempyre.h>
 
-int main(int argc, char** argv) {
-
+int main(int argc, char* argv[]) {
+    Gempyre::setDebug();
     TilzeObserver to;
-    Game game(to);
+    Game game(to, argc, argv);
 
     Tilze tilze(game);
     AutoPlay auto_play(game, tilze);
     to = auto_play;
     to = tilze;
+
+    GempyreUtils::cleanArgs(argc, argv);
 
     if(argc > 1)
         auto_play.play(argv[1]);
