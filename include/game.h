@@ -17,7 +17,7 @@ class Game : public GameEnv {
     using CubePtr = std::shared_ptr<Cube>;
 public:
     enum class Animation {Move, Fade};
-    Game(GameObserver& obs, int argc, char* argv[]);
+    Game(GameObserver& obs);
     ~Game();
     void animate(const CubePtr& cube, Animation anim_type);
     void setPoints(int points);

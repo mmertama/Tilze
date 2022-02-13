@@ -31,7 +31,7 @@ void AutoPlay::play(const std::string& name) {
     const auto ss = GempyreUtils::split<std::vector<std::string>>(f, '\n');
     for(const auto& v : ss) {
         const auto s = GempyreUtils::split<std::vector<std::string>>(v, ' ');
-        m_playVec.push_back(std::make_pair(GempyreUtils::to<int>(s[0]), GempyreUtils::to<int>(s[1])));
+        m_playVec.push_back(std::make_pair(GempyreUtils::convert<int>(s[0]), GempyreUtils::convert<int>(s[1])));
     }
 
     m_it = m_playVec.begin();

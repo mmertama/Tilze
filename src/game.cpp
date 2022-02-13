@@ -45,12 +45,11 @@ void Game::add(const CubePtr& cube, int next) {
     setNumber(next);
 }
 
-Game::Game(GameObserver& obs, int argc, char** argv)  :
-    GameEnv(argc, argv),
+Game::Game(GameObserver& obs)  :
+    GameEnv(),
     m_obs(obs),
     m_animator(*this),
     m_canvas(std::make_unique<Gempyre::CanvasElement>(*m_ui, "canvas")) {
-    Gempyre::setDebug(Gempyre::DebugLevel::Info);
     Element(*m_ui, "restart").subscribe("click", [this](auto) {
          Element(*m_ui, "game_over_win").setAttribute("style", "visibility:hidden");
          m_gameOver = false;
@@ -60,7 +59,7 @@ Game::Game(GameObserver& obs, int argc, char** argv)  :
     m_canvas->subscribe("click", [this](const auto& ev) {
         if(m_gameOver || m_animator.isActive())
             return;
-        const auto x = GempyreUtils::to<int>(ev.properties.at("clientX"));
+        const auto x = GempyreUtils::convert<int>(ev.properties.at("clientX"));
         m_selected = m_view.stripeAt(x);
         const auto ptr = m_obs.select(*m_selected);
         if(ptr) {

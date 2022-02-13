@@ -11,7 +11,7 @@ namespace Gempyre {
 
 class GameEnv {
 public:
-    GameEnv(int argc, char* argv[]);
+    GameEnv();
     ~GameEnv();
     void after(const std::chrono::milliseconds& f, const std::function<void()>&);
     int startPeriodic(const std::chrono::milliseconds& f, const std::function<void()>&);
