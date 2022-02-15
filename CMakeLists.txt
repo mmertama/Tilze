@@ -4,7 +4,11 @@ project (Tilze LANGUAGES CXX)
 
 find_package (gempyre REQUIRED)
 include(gempyre)
-# include(hiillos)
+
+if(RASPBERRY)
+    set(CMAKE_CXX_FLAGS "-Wno-psabi ${CMAKE_CXX_FLAGS}")
+endif()
+
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -37,7 +41,6 @@ add_executable(${PROJECT_NAME}
     gempyre.conf
     )
 
-# hiillos_make_application(${PROJECT_NAME})
 
 add_compile_definitions(StripeCount=5)
 add_compile_definitions(RowCount=5)
@@ -45,9 +48,3 @@ add_compile_definitions(RowCount=5)
 gempyre_add_resources(PROJECT ${PROJECT_NAME} TARGET include/ui_resource.h SOURCES gui/ui.html gui/favicon.ico gempyre.conf)
 
 target_link_libraries (${PROJECT_NAME}  gempyre::gempyre)
-
-
-#target_link_libraries (${PROJECT_NAME}
-#        /usr/local/lib/gempyre/libgempyred.a
-#        /usr/local/lib/gempyre/uSockets.a
-#        -lpthread)

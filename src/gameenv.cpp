@@ -4,6 +4,7 @@
 #include <gempyre_graphics.h>
 #include <gempyre_utils.h>
 
+
 GameEnv::GameEnv() :
     m_ui(std::make_unique<Gempyre::Ui>(Ui_resourceh, "/ui.html")) {
 }
