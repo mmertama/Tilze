@@ -22,8 +22,8 @@ static int get2Pow(int max) {
 
 
 TilzeObserver::TilzeObserver() : m_nextValue(get2Pow(6)) {}
-TilzeObserver& TilzeObserver::operator=(Tilze& tilze) {m_tilze = &tilze; return *this;}
-TilzeObserver& TilzeObserver::operator=(AutoPlay& play) {m_play = &play; return *this;}
+void TilzeObserver::set(Tilze& tilze) {m_tilze = &tilze;}
+void TilzeObserver::set(AutoPlay& play) {m_play = &play;}
 
 void TilzeObserver::draw(Gempyre::FrameComposer& fc) {
     for(const auto& c : *m_tilze) {

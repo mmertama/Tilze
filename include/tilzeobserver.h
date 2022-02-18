@@ -14,8 +14,8 @@ namespace Gempyre {
 class TilzeObserver : public GameObserver {
 public:
     TilzeObserver();
-    TilzeObserver& operator=(Tilze& tilze);
-    TilzeObserver& operator=(AutoPlay& play);
+    void set(Tilze& tilze);
+    void set(AutoPlay& play);
     void draw(Gempyre::FrameComposer& fc) override;
     void resize(const View& view) override;
     std::optional<std::tuple<CubePtr, int>> select(int stripe) override;

@@ -6,17 +6,24 @@
 #include <gempyre.h>
 
 int main(int argc, char** argv) {
-    Gempyre::setDebug();
+    int auto_data = 0;
+    for(int i = 1; i < argc; i++) {
+        if(argv[i] == std::string("-debug"))
+            Gempyre::setDebug();
+        if(argv[i] == std::string("-auto") && argc < i + 1)
+            auto_data = i + 1;    
+        }
+            
     TilzeObserver to;
     Game game(to);
 
     Tilze tilze(game);
     AutoPlay auto_play(game, tilze);
-    to = auto_play;
-    to = tilze;
+    to.set(auto_play);
+    to.set(tilze);
 
-    if(argc > 1)
-        auto_play.play(argv[1]);
+    if(auto_data)
+        auto_play.play(argv[auto_data]);
 
     game.run();
     return 0;
