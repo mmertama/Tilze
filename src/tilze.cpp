@@ -33,9 +33,13 @@ std::optional<Tilze::CubePtr> Tilze::select(int stripe, int value) {
     m_history = std::nullopt;
     m_selected_stripe = std::make_optional(stripe);
     const auto r = addCube(m_current_number, stripe);
+    if(r) {
+        record(m_current_number, stripe);
+    }
     m_current_number = value;
     return r;
 }
+
 
 std::optional<Tilze::CubePtr> Tilze::addCube(int number, int stripe) {
     const auto ani = m_cubes.add(number, stripe);
@@ -154,5 +158,23 @@ void Tilze::squeeze() {
 
 bool Tilze::canAdd() const {
     return !m_squeeze && m_actions.empty();
+}
+
+bool Tilze::setRecord(const std::string& file) {
+    std::ofstream out;
+    out.open(file,  std::ofstream::out | std::ofstream::trunc);
+    if(out.good()) {
+        m_record = file;
+        return true;
+    }
+    return false;
+}
+
+void Tilze::record(int current_number, int stripe) {
+    if(!m_record.empty()) {
+        std::ofstream out;
+        out.open(m_record,  std::ofstream::out | std::ofstream::app);
+        out << current_number << " " << stripe << std::endl;
+    }
 }
 
