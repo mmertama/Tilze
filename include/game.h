@@ -14,8 +14,8 @@ namespace Gempyre {
 }
 
 class Game : public GameEnv {
-    using CubePtr = std::shared_ptr<Cube>;
 public:
+    using CubePtr = std::shared_ptr<Cube>;
     enum class Animation {Move, Fade};
     Game(GameObserver& obs);
     ~Game();

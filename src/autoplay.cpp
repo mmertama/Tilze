@@ -1,6 +1,7 @@
 #include "autoplay.h"
 #include "tilze.h"
 #include "cube.h"
+#include "game.h"
 #include <filesystem>
 #include <gempyre_utils.h>
 #include <chrono>
@@ -48,11 +49,18 @@ void AutoPlay::play(const std::string& name) {
                 return;
             }
 
-            const auto c = m_tilze.select(m_it->second, m_it->first);
-            m_env.add(*c, (*c)->value());
-            ++m_it;
-            const auto dd = std::distance(m_playVec.begin(), m_it);
-            GempyreUtils::log(GempyreUtils::LogLevel::Info, "autoplay", dd);
+            const auto cube_ptr = m_tilze.select(m_it->second, m_it->first);
+            if(cube_ptr && *cube_ptr) {
+                m_env.add(*cube_ptr, (*cube_ptr)->value());
+                ++m_it;
+                const auto dd = std::distance(m_playVec.begin(), m_it);
+                GempyreUtils::log(GempyreUtils::LogLevel::Info, "autoplay", dd);
+            } else {
+                GempyreUtils::log(GempyreUtils::LogLevel::Error, "autoplay failed at",
+                                  std::distance(m_playVec.begin(), m_it),
+                                  "as", m_it->second, m_it->first);
+                  ++m_it;
+            }
             });
 }
 
