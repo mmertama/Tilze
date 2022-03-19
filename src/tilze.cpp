@@ -32,11 +32,11 @@ void Tilze::clear() {
 std::optional<Tilze::CubePtr> Tilze::select(int stripe, int value) {
     m_history = std::nullopt;
     m_selected_stripe = std::make_optional(stripe);
-    const auto r = addCube(m_current_number, stripe);
+    const auto r = addCube(value, stripe);
     if(r) {
-        record(m_current_number, stripe);
+        record(value, stripe);
+        m_current_number = value;
     }
-    m_current_number = value;
     return r;
 }
 

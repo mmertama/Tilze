@@ -151,6 +151,14 @@ void Game::run() {
     m_ui->run();
 }
 
+bool Game::isActive() const {
+    return m_animator.isActive();
+}
+
+bool Game::isGameOver() const {
+    return m_gameOver;
+}
+
 /*
 void Game::requestDraw() {
     GempyreUtils::log(GempyreUtils::LogLevel::Info, "requestDraw", m_onRedraw);

@@ -119,7 +119,7 @@ public:
         vec.reserve(4);
         const auto check = [&vec, &cube, this](int s, int l) {
             auto c = at(s, l);
-            if(!c || !c->isAlive() || c->value() != cube->value())
+            if(!(c && c->isAlive() && c->value() == cube->value()))
                 return;
             auto taken = take(s, l);
             taken->kill();

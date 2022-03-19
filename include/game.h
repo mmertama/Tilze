@@ -29,6 +29,8 @@ public:
     void drawEnd() override;
     void add(const CubePtr& ptr, int next_value);
     void setPostAnimation(const std::function<void ()>& finished);
+    bool isActive() const;
+    bool isGameOver() const;
 private:
     void resize();
     void drawFrame();

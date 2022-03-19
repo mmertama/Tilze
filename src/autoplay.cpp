@@ -44,7 +44,7 @@ void AutoPlay::play(const std::string& name) {
                 m_timer = 0;
                 return;
             }
-            else if(!m_tilze.canAdd()) {
+            else if(!m_tilze.canAdd() || m_env.isActive() || m_env.isGameOver()) {
                 //m_tilze.setHistory(m_it->second, m_it->first);
                 return;
             }
