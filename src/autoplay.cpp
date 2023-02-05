@@ -13,7 +13,7 @@ static std::string uniqName() {
     auto path = std::filesystem::temp_directory_path() / "tilze";
     int p = 0;
     auto name = path.string() + ".txt";
-    while(GempyreUtils::fileExists(name)) {
+    while(GempyreUtils::file_exists(name)) {
         ++p;
         name = path.string() + std::to_string(p) + ".txt";
     }
@@ -31,7 +31,7 @@ void AutoPlay::play(const std::string& name) {
     const auto ss = GempyreUtils::split<std::vector<std::string>>(f, '\n');
     for(const auto& v : ss) {
         const auto s = GempyreUtils::split<std::vector<std::string>>(v, ' ');
-        m_playVec.push_back(std::make_pair(GempyreUtils::to<int>(s[0]), GempyreUtils::to<int>(s[1])));
+        m_playVec.push_back(std::make_pair(GempyreUtils::parse<int>(s[0]).value(), GempyreUtils::parse<int>(s[1]).value()));
     }
 
     m_it = m_playVec.begin();

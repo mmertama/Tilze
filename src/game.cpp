@@ -15,17 +15,17 @@ constexpr auto FadeSpeed = TimerPeriod * 10;
 constexpr auto AddSpeed = 1s;
 
 void Game::setPoints(int points) {
-    Element(*m_ui, "points").setHTML(std::to_string(points));
+    Element(*m_ui, "points").set_html(std::to_string(points));
 }
 
 void Game::setGameOver(int points) {
     m_gameOver = true;
-        Element(*m_ui, "game_over_win").setAttribute("style", "visibility:visible");
-        Element(*m_ui, "game_over_points").setHTML(std::to_string(points));
+        Element(*m_ui, "game_over_win").set_attribute("style", "visibility:visible");
+        Element(*m_ui, "game_over_points").set_html(std::to_string(points));
 }
 
 void Game::setNumber(int value) {
-    Element(*m_ui, "number").setHTML(std::to_string(value));
+    Element(*m_ui, "number").set_html(std::to_string(value));
 }
 
 Game::~Game() {}
@@ -50,9 +50,9 @@ Game::Game(GameObserver& obs, int argc, char** argv)  :
     m_obs(obs),
     m_animator(*this),
     m_canvas(std::make_unique<Gempyre::CanvasElement>(*m_ui, "canvas")) {
-    Gempyre::setDebug(Gempyre::DebugLevel::Info);
+    GempyreUtils::set_log_level(GempyreUtils::LogLevel::Info);
     Element(*m_ui, "restart").subscribe("click", [this](auto) {
-         Element(*m_ui, "game_over_win").setAttribute("style", "visibility:hidden");
+         Element(*m_ui, "game_over_win").set_attribute("style", "visibility:hidden");
          m_gameOver = false;
          m_obs.reset();
     });
@@ -60,8 +60,9 @@ Game::Game(GameObserver& obs, int argc, char** argv)  :
     m_canvas->subscribe("click", [this](const auto& ev) {
         if(m_gameOver || m_animator.isActive())
             return;
-        const auto x = GempyreUtils::to<int>(ev.properties.at("clientX"));
-        m_selected = m_view.stripeAt(x);
+        const auto x = GempyreUtils::parse<int>(ev.properties.at("clientX"));
+        gempyre_utils_assert(x);
+        m_selected = m_view.stripeAt(*x);
         const auto ptr = m_obs.select(*m_selected);
         if(ptr) {
            add(std::get<CubePtr>(*ptr), std::get<int>(*ptr));
@@ -73,7 +74,7 @@ Game::Game(GameObserver& obs, int argc, char** argv)  :
        this->resize();
     }, {}, 200ms);
 
-    m_ui->onOpen([this] {
+    m_ui->on_open([this] {
         this->resize();
     });
 }
@@ -85,8 +86,8 @@ void Game::resize() {
     assert(dash_rect);
     const auto width = rect->width;
     const auto height = rect->height - dash_rect->height;
-    m_canvas->setAttribute("width", std::to_string(width));
-    m_canvas->setAttribute("height", std::to_string(height));
+    m_canvas->set_attribute("width", std::to_string(width));
+    m_canvas->set_attribute("height", std::to_string(height));
 
     m_view.set(width, height);
     m_obs.resize(m_view);
@@ -98,12 +99,12 @@ void Game::drawStart() {
     if(m_onRedraw)
         return;
     m_onRedraw = true;
-    m_canvas->drawCompleted([this](){drawFrame();});
+    m_canvas->draw_completed([this](){drawFrame();});
     drawFrame();
 }
 
 void Game::drawEnd() {
-    m_canvas->drawCompleted(nullptr);
+    m_canvas->draw_completed(nullptr);
     m_onRedraw = false;
     drawFrame();
 }
@@ -116,7 +117,7 @@ void Game::drawOnce() {
 
 void Game::drawFrame()  {
     FrameComposer fc;
-    fc.fillStyle("black");
+    fc.fill_style("black");
     m_view.draw(fc, m_selected);
     m_obs.draw(fc);
     for(const auto& a : m_animator) {

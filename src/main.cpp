@@ -6,7 +6,7 @@
 #include <gempyre.h>
 
 int main(int argc, char* argv[]) {
-    Gempyre::setDebug();
+    Gempyre::set_debug();
     TilzeObserver to;
     Game game(to, argc, argv);
 
@@ -14,8 +14,6 @@ int main(int argc, char* argv[]) {
     AutoPlay auto_play(game, tilze);
     to = auto_play;
     to = tilze;
-
-    GempyreUtils::cleanArgs(argc, argv);
 
     if(argc > 1)
         auto_play.play(argv[1]);
